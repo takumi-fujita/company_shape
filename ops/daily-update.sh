@@ -169,8 +169,17 @@ git diff --quiet && git diff --cached --quiet || fail "作業ツリーに未コ�
 CURRENT_BRANCH="$(git rev-parse --abbrev-ref HEAD)"
 [ "$CURRENT_BRANCH" = "$BRANCH" ] || fail "ブランチが $CURRENT_BRANCH です（$BRANCH で実行してください）"
 
-log "リモートの変更を取り込みます"
-git pull --rebase --quiet origin "$BRANCH"
+if [ "${SKIP_PUSH:-false}" = "true" ]; then
+  log "SKIP_PUSH=true のため、リモートとのやり取りを行いません"
+elif ! git remote get-url origin >/dev/null 2>&1; then
+  log "origin が未設定のため、リモートとのやり取りを行いません"
+  SKIP_PUSH=true
+else
+  log "リモートの変更を取り込みます"
+  if ! git pull --rebase --quiet origin "$BRANCH" 2>&1 | tee -a "$LOG_FILE"; then
+    fail "git pull に失敗しました。origin への認証（SSH 鍵 / GIT_TOKEN）を確認してください。"
+  fi
+fi
 
 # --- ETL -------------------------------------------------------------------
 # 有報 → 補助金 → 要約 → パーセンタイル再計算まで main.py が面倒を見る。
@@ -211,9 +220,16 @@ fi
 COMPANY_COUNT="$(count_companies data/companies.db)"
 git add data/companies.db
 git commit --quiet -m "data: ${DATE_FROM} .. ${DATE_TO} の提出分を反映（${COMPANY_COUNT} 社）"
-git push --quiet origin "$BRANCH"
+
+if [ "${SKIP_PUSH:-false}" = "true" ]; then
+  log "コミットしました（${COMPANY_COUNT} 社）。SKIP_PUSH=true のため push はしません。"
+else
+  if ! git push --quiet origin "$BRANCH" 2>&1 | tee -a "$LOG_FILE"; then
+    fail "git push に失敗しました。origin への認証（SSH 鍵 / GIT_TOKEN）を確認してください。"
+  fi
+  log "push しました（${COMPANY_COUNT} 社）。"
+fi
 emit_changed true
-log "push しました（${COMPANY_COUNT} 社）。"
 
 # --- フロントのビルドと配信 -------------------------------------------------
 deploy_site

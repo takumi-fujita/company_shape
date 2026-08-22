@@ -25,6 +25,10 @@ services:
     volumes:
       # ホストのリポジトリをそのまま使う。data/companies.db がホスト側に残る。
       - .:/app
+      # origin が SSH の場合だけ鍵を渡す。既定では空ディレクトリなので何も露出しない。
+      # 使うときは .env に絶対パスで書く（compose は ~ を展開しない）:
+      #   GIT_SSH_DIR=/Users/you/.ssh
+      - ${GIT_SSH_DIR:-./docker/no-ssh}:/ssh-keys:ro
       # clone 運用に切り替えるときは上を消してこちらを使う:
       # - repo:/app
       - pip-cache:/root/.cache/pip

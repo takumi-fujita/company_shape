@@ -95,6 +95,22 @@ docker compose up -d                # 問題なければ常駐させる
 docker compose logs -f etl
 ```
 
+### git の認証
+
+コンテナは `data/companies.db` を push するので、`origin` の形式に応じた資格情報が要る。
+**無人実行では対話プロンプトが出た時点で詰む**ため、起動時に確かめて、無ければ
+「何をすればよいか」を出して止まる。
+
+| `origin` | 用意するもの |
+|---|---|
+| `git@github.com:USER/REPO.git`（SSH） | `.env` に `GIT_SSH_DIR=/Users/you/.ssh`（絶対パス。compose は `~` を展開しない） |
+| `https://github.com/USER/REPO.git` | `.env` に `GIT_TOKEN=<repo 権限のトークン>` |
+| push しない | `.env` に `SKIP_PUSH=true`（データ更新と配信だけ行う） |
+
+SSH 鍵は `/ssh-keys` に読み取り専用でマウントし、コンテナ内の書ける場所へコピーして
+権限を 600 に直してから使う（SSH は鍵の権限に厳しい）。
+ホスト鍵の検証は `accept-new`（初回は受け入れ、変わったら失敗）で、対話しない。
+
 リポジトリは既定でホストのものをマウントする（`.:/app`）。
 ホストにチェックアウトを置きたくない場合は、`docker-compose.yml` の `volumes` を
 `repo:/app` に切り替え、`.env` に `GIT_REMOTE` と `GIT_TOKEN` を書けば

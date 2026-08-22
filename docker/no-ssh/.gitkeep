@@ -1,0 +1,3 @@
+このディレクトリは空のままにする。origin が SSH のときの GIT_SSH_DIR の既定値で、
+「鍵を渡していない」ことを表す。鍵を渡すときは .env に絶対パスで書く:
+  GIT_SSH_DIR=/Users/you/.ssh
