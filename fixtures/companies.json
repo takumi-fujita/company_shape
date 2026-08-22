@@ -1,0 +1,2417 @@
+{
+  "companies": [
+    {
+      "edinetCode": "E04213",
+      "corpNumber": "7010001042130",
+      "name": "株式会社ミナトソフトウェア",
+      "nameKana": "ミナトソフトウエア",
+      "market": "グロース",
+      "secCode": "4213",
+      "industryCode": "software",
+      "industryLabel": "ソフトウェア開発",
+      "fiscalEnd": "2026-03",
+      "filedAt": "2026-06-26",
+      "consolidated": true,
+      "employees": 312,
+      "avgSalary": 6480,
+      "avgTenure": 5.8,
+      "cash": 2180,
+      "monthlyCost": 118,
+      "runway": 18.5,
+      "growth": 10.1,
+      "summary": "企業向けの受託システム開発が売上の約 7 割。残りは自社パッケージの保守と運用サポート。取引先は金融と製造が中心で、大手 SIer の下請けではなく元請けで入る案件が多い。近年は自社プロダクトの比率を少しずつ増やしている。",
+      "tags": [
+        "受託開発",
+        "元請け中心",
+        "金融・製造",
+        "自社製品あり"
+      ],
+      "updatedAt": "2026-08-20",
+      "fiscalPeriods": [
+        {
+          "label": "22/3",
+          "seq": 0,
+          "revenue": 9360,
+          "operatingProfit": 468,
+          "employees": 243,
+          "avgSalary": 6240,
+          "segments": [
+            {
+              "name": "主力事業",
+              "value": 211
+            },
+            {
+              "name": "関連サービス",
+              "value": 154
+            },
+            {
+              "name": "保守・その他",
+              "value": 103
+            }
+          ]
+        },
+        {
+          "label": "23/3",
+          "seq": 1,
+          "revenue": 10310,
+          "operatingProfit": 567,
+          "employees": 261,
+          "avgSalary": 6300,
+          "segments": [
+            {
+              "name": "主力事業",
+              "value": 255
+            },
+            {
+              "name": "関連サービス",
+              "value": 187
+            },
+            {
+              "name": "保守・その他",
+              "value": 125
+            }
+          ]
+        },
+        {
+          "label": "24/3",
+          "seq": 2,
+          "revenue": 11350,
+          "operatingProfit": 681,
+          "employees": 278,
+          "avgSalary": 6360,
+          "segments": [
+            {
+              "name": "主力事業",
+              "value": 306
+            },
+            {
+              "name": "関連サービス",
+              "value": 225
+            },
+            {
+              "name": "保守・その他",
+              "value": 150
+            }
+          ]
+        },
+        {
+          "label": "25/3",
+          "seq": 3,
+          "revenue": 12490,
+          "operatingProfit": 812,
+          "employees": 295,
+          "avgSalary": 6420,
+          "segments": [
+            {
+              "name": "主力事業",
+              "value": 365
+            },
+            {
+              "name": "関連サービス",
+              "value": 268
+            },
+            {
+              "name": "保守・その他",
+              "value": 179
+            }
+          ]
+        },
+        {
+          "label": "26/3",
+          "seq": 4,
+          "revenue": 13750,
+          "operatingProfit": 963,
+          "employees": 312,
+          "avgSalary": 6480,
+          "segments": [
+            {
+              "name": "主力事業",
+              "value": 433
+            },
+            {
+              "name": "関連サービス",
+              "value": 318
+            },
+            {
+              "name": "保守・その他",
+              "value": 212
+            }
+          ]
+        }
+      ],
+      "subsidies": [
+        {
+          "year": 2025,
+          "name": "IT導入補助金（複数社連携枠）",
+          "amount": 41,
+          "ratio": 0.3,
+          "source": "gbizinfo"
+        },
+        {
+          "year": 2024,
+          "name": "事業再構築補助金（成長枠）",
+          "amount": 137,
+          "ratio": 1.1,
+          "source": "gbizinfo"
+        },
+        {
+          "year": 2023,
+          "name": "キャリアアップ助成金",
+          "amount": 5,
+          "ratio": 0.04,
+          "source": "gbizinfo"
+        },
+        {
+          "year": 2022,
+          "name": "中小企業DX推進支援助成金",
+          "amount": 13,
+          "ratio": 0.13,
+          "source": "gbizinfo"
+        }
+      ],
+      "percentiles": {
+        "salary": 58,
+        "tenure": 31,
+        "growth": 67,
+        "scale": 46,
+        "finance": 67
+      }
+    },
+    {
+      "edinetCode": "E03822",
+      "corpNumber": "7010001038220",
+      "name": "クレイン・テクノロジー株式会社",
+      "nameKana": "クレインテクノロジー",
+      "market": "プライム",
+      "secCode": "3822",
+      "industryCode": "software",
+      "industryLabel": "ソフトウェア開発",
+      "fiscalEnd": "2026-03",
+      "filedAt": "2026-06-26",
+      "consolidated": true,
+      "employees": 401,
+      "avgSalary": 6910,
+      "avgTenure": 8.4,
+      "cash": 1420,
+      "monthlyCost": 151,
+      "runway": 9.4,
+      "growth": 6.4,
+      "summary": "通信キャリア向けの基幹システム開発が主力。長期の保守契約が売上の半分を占め、残りはクラウド移行支援。海外拠点はなく、国内大手 3 社との取引に集中している。",
+      "tags": [
+        "通信向け",
+        "長期保守",
+        "大口取引"
+      ],
+      "updatedAt": "2026-08-20",
+      "fiscalPeriods": [
+        {
+          "label": "22/3",
+          "seq": 0,
+          "revenue": 12030,
+          "operatingProfit": 602,
+          "employees": 313,
+          "avgSalary": 6670,
+          "segments": [
+            {
+              "name": "主力事業",
+              "value": 271
+            },
+            {
+              "name": "関連サービス",
+              "value": 199
+            },
+            {
+              "name": "保守・その他",
+              "value": 132
+            }
+          ]
+        },
+        {
+          "label": "23/3",
+          "seq": 1,
+          "revenue": 12800,
+          "operatingProfit": 704,
+          "employees": 335,
+          "avgSalary": 6730,
+          "segments": [
+            {
+              "name": "主力事業",
+              "value": 317
+            },
+            {
+              "name": "関連サービス",
+              "value": 232
+            },
+            {
+              "name": "保守・その他",
+              "value": 155
+            }
+          ]
+        },
+        {
+          "label": "24/3",
+          "seq": 2,
+          "revenue": 13620,
+          "operatingProfit": 817,
+          "employees": 357,
+          "avgSalary": 6790,
+          "segments": [
+            {
+              "name": "主力事業",
+              "value": 368
+            },
+            {
+              "name": "関連サービス",
+              "value": 270
+            },
+            {
+              "name": "保守・その他",
+              "value": 179
+            }
+          ]
+        },
+        {
+          "label": "25/3",
+          "seq": 3,
+          "revenue": 14490,
+          "operatingProfit": 942,
+          "employees": 379,
+          "avgSalary": 6850,
+          "segments": [
+            {
+              "name": "主力事業",
+              "value": 424
+            },
+            {
+              "name": "関連サービス",
+              "value": 311
+            },
+            {
+              "name": "保守・その他",
+              "value": 207
+            }
+          ]
+        },
+        {
+          "label": "26/3",
+          "seq": 4,
+          "revenue": 15420,
+          "operatingProfit": 1079,
+          "employees": 401,
+          "avgSalary": 6910,
+          "segments": [
+            {
+              "name": "主力事業",
+              "value": 486
+            },
+            {
+              "name": "関連サービス",
+              "value": 356
+            },
+            {
+              "name": "保守・その他",
+              "value": 237
+            }
+          ]
+        }
+      ],
+      "subsidies": [
+        {
+          "year": 2025,
+          "name": "IT導入補助金（複数社連携枠）",
+          "amount": 46,
+          "ratio": 0.3,
+          "source": "gbizinfo"
+        },
+        {
+          "year": 2024,
+          "name": "事業再構築補助金（成長枠）",
+          "amount": 159,
+          "ratio": 1.1,
+          "source": "gbizinfo"
+        },
+        {
+          "year": 2023,
+          "name": "キャリアアップ助成金",
+          "amount": 5,
+          "ratio": 0.04,
+          "source": "gbizinfo"
+        },
+        {
+          "year": 2022,
+          "name": "中小企業DX推進支援助成金",
+          "amount": 17,
+          "ratio": 0.13,
+          "source": "gbizinfo"
+        }
+      ],
+      "percentiles": {
+        "salary": 75,
+        "tenure": 54,
+        "growth": 42,
+        "scale": 62,
+        "finance": 25
+      }
+    },
+    {
+      "edinetCode": "E02947",
+      "corpNumber": "7010001029470",
+      "name": "株式会社アオイシステムズ",
+      "nameKana": "アオイシステムズ",
+      "market": "スタンダード",
+      "secCode": "2947",
+      "industryCode": "si",
+      "industryLabel": "SI・受託開発",
+      "fiscalEnd": "2026-03",
+      "filedAt": "2026-06-26",
+      "consolidated": true,
+      "employees": 268,
+      "avgSalary": 6320,
+      "avgTenure": 9.1,
+      "cash": 1980,
+      "monthlyCost": 92,
+      "runway": 21.5,
+      "growth": 4.8,
+      "summary": "自治体・公共向けの業務システムの受託開発が中心。案件は入札経由が多く、年度後半に売上が偏る。5 年以上の継続案件が売上の 6 割。",
+      "tags": [
+        "公共向け",
+        "入札案件",
+        "継続比率高"
+      ],
+      "updatedAt": "2026-08-20",
+      "fiscalPeriods": [
+        {
+          "label": "22/3",
+          "seq": 0,
+          "revenue": 8040,
+          "operatingProfit": 402,
+          "employees": 209,
+          "avgSalary": 6080,
+          "segments": [
+            {
+              "name": "主力事業",
+              "value": 181
+            },
+            {
+              "name": "関連サービス",
+              "value": 133
+            },
+            {
+              "name": "保守・その他",
+              "value": 88
+            }
+          ]
+        },
+        {
+          "label": "23/3",
+          "seq": 1,
+          "revenue": 8430,
+          "operatingProfit": 464,
+          "employees": 224,
+          "avgSalary": 6140,
+          "segments": [
+            {
+              "name": "主力事業",
+              "value": 209
+            },
+            {
+              "name": "関連サービス",
+              "value": 153
+            },
+            {
+              "name": "保守・その他",
+              "value": 102
+            }
+          ]
+        },
+        {
+          "label": "24/3",
+          "seq": 2,
+          "revenue": 8830,
+          "operatingProfit": 530,
+          "employees": 239,
+          "avgSalary": 6200,
+          "segments": [
+            {
+              "name": "主力事業",
+              "value": 238
+            },
+            {
+              "name": "関連サービス",
+              "value": 175
+            },
+            {
+              "name": "保守・その他",
+              "value": 117
+            }
+          ]
+        },
+        {
+          "label": "25/3",
+          "seq": 3,
+          "revenue": 9250,
+          "operatingProfit": 601,
+          "employees": 253,
+          "avgSalary": 6260,
+          "segments": [
+            {
+              "name": "主力事業",
+              "value": 270
+            },
+            {
+              "name": "関連サービス",
+              "value": 198
+            },
+            {
+              "name": "保守・その他",
+              "value": 133
+            }
+          ]
+        },
+        {
+          "label": "26/3",
+          "seq": 4,
+          "revenue": 9700,
+          "operatingProfit": 679,
+          "employees": 268,
+          "avgSalary": 6320,
+          "segments": [
+            {
+              "name": "主力事業",
+              "value": 306
+            },
+            {
+              "name": "関連サービス",
+              "value": 224
+            },
+            {
+              "name": "保守・その他",
+              "value": 149
+            }
+          ]
+        }
+      ],
+      "subsidies": [
+        {
+          "year": 2025,
+          "name": "IT導入補助金（複数社連携枠）",
+          "amount": 29,
+          "ratio": 0.3,
+          "source": "gbizinfo"
+        },
+        {
+          "year": 2024,
+          "name": "事業再構築補助金（成長枠）",
+          "amount": 102,
+          "ratio": 1.1,
+          "source": "gbizinfo"
+        },
+        {
+          "year": 2023,
+          "name": "キャリアアップ助成金",
+          "amount": 4,
+          "ratio": 0.05,
+          "source": "gbizinfo"
+        },
+        {
+          "year": 2022,
+          "name": "中小企業DX推進支援助成金",
+          "amount": 11,
+          "ratio": 0.13,
+          "source": "gbizinfo"
+        }
+      ],
+      "percentiles": {
+        "salary": 50,
+        "tenure": 62,
+        "growth": 33,
+        "scale": 38,
+        "finance": 83
+      }
+    },
+    {
+      "edinetCode": "E04477",
+      "corpNumber": "7010001044770",
+      "name": "株式会社ノースブリッジ",
+      "nameKana": "ノースブリッジ",
+      "market": "グロース",
+      "secCode": "4477",
+      "industryCode": "web",
+      "industryLabel": "Webサービス",
+      "fiscalEnd": "2026-03",
+      "filedAt": "2026-06-26",
+      "consolidated": true,
+      "employees": 196,
+      "avgSalary": 5840,
+      "avgTenure": 3.9,
+      "cash": 460,
+      "monthlyCost": 96,
+      "runway": 4.8,
+      "growth": 17.5,
+      "summary": "個人向けサブスクリプション型 Web サービスを 2 本運営。広告費が費用の約 4 割を占め、売上は会員数の増減に連動する。法人向けは今期から開始。",
+      "tags": [
+        "toC",
+        "サブスク",
+        "広告費が大きい"
+      ],
+      "updatedAt": "2026-08-20",
+      "fiscalPeriods": [
+        {
+          "label": "22/3",
+          "seq": 0,
+          "revenue": 5880,
+          "operatingProfit": 294,
+          "employees": 153,
+          "avgSalary": 5600,
+          "segments": [
+            {
+              "name": "主力事業",
+              "value": 132
+            },
+            {
+              "name": "関連サービス",
+              "value": 97
+            },
+            {
+              "name": "保守・その他",
+              "value": 65
+            }
+          ]
+        },
+        {
+          "label": "23/3",
+          "seq": 1,
+          "revenue": 6910,
+          "operatingProfit": 380,
+          "employees": 164,
+          "avgSalary": 5660,
+          "segments": [
+            {
+              "name": "主力事業",
+              "value": 171
+            },
+            {
+              "name": "関連サービス",
+              "value": 125
+            },
+            {
+              "name": "保守・その他",
+              "value": 84
+            }
+          ]
+        },
+        {
+          "label": "24/3",
+          "seq": 2,
+          "revenue": 8120,
+          "operatingProfit": 487,
+          "employees": 174,
+          "avgSalary": 5720,
+          "segments": [
+            {
+              "name": "主力事業",
+              "value": 219
+            },
+            {
+              "name": "関連サービス",
+              "value": 161
+            },
+            {
+              "name": "保守・その他",
+              "value": 107
+            }
+          ]
+        },
+        {
+          "label": "25/3",
+          "seq": 3,
+          "revenue": 9540,
+          "operatingProfit": 620,
+          "employees": 185,
+          "avgSalary": 5780,
+          "segments": [
+            {
+              "name": "主力事業",
+              "value": 279
+            },
+            {
+              "name": "関連サービス",
+              "value": 205
+            },
+            {
+              "name": "保守・その他",
+              "value": 136
+            }
+          ]
+        },
+        {
+          "label": "26/3",
+          "seq": 4,
+          "revenue": 11210,
+          "operatingProfit": 785,
+          "employees": 196,
+          "avgSalary": 5840,
+          "segments": [
+            {
+              "name": "主力事業",
+              "value": 353
+            },
+            {
+              "name": "関連サービス",
+              "value": 259
+            },
+            {
+              "name": "保守・その他",
+              "value": 173
+            }
+          ]
+        }
+      ],
+      "subsidies": [
+        {
+          "year": 2025,
+          "name": "IT導入補助金（複数社連携枠）",
+          "amount": 34,
+          "ratio": 0.3,
+          "source": "gbizinfo"
+        },
+        {
+          "year": 2024,
+          "name": "事業再構築補助金（成長枠）",
+          "amount": 105,
+          "ratio": 1.1,
+          "source": "gbizinfo"
+        },
+        {
+          "year": 2023,
+          "name": "キャリアアップ助成金",
+          "amount": 3,
+          "ratio": 0.04,
+          "source": "gbizinfo"
+        },
+        {
+          "year": 2022,
+          "name": "中小企業DX推進支援助成金",
+          "amount": 9,
+          "ratio": 0.13,
+          "source": "gbizinfo"
+        }
+      ],
+      "percentiles": {
+        "salary": 8,
+        "tenure": 15,
+        "growth": 100,
+        "scale": 23,
+        "finance": 8
+      }
+    },
+    {
+      "edinetCode": "E09713",
+      "corpNumber": "7010001097130",
+      "name": "セキネ情報システム株式会社",
+      "nameKana": "セキネジヨウホウシステム",
+      "market": "プライム",
+      "secCode": "9713",
+      "industryCode": "si",
+      "industryLabel": "SI・受託開発",
+      "fiscalEnd": "2026-03",
+      "filedAt": "2026-06-26",
+      "consolidated": true,
+      "employees": 1342,
+      "avgSalary": 6180,
+      "avgTenure": 12.6,
+      "cash": 6100,
+      "monthlyCost": 377,
+      "runway": 16.2,
+      "growth": 3.6,
+      "summary": null,
+      "tags": null,
+      "updatedAt": "2026-08-20",
+      "fiscalPeriods": [
+        {
+          "label": "22/3",
+          "seq": 0,
+          "revenue": 40260,
+          "operatingProfit": 2013,
+          "employees": 1047,
+          "avgSalary": 5940,
+          "segments": [
+            {
+              "name": "主力事業",
+              "value": 906
+            },
+            {
+              "name": "関連サービス",
+              "value": 664
+            },
+            {
+              "name": "保守・その他",
+              "value": 443
+            }
+          ]
+        },
+        {
+          "label": "23/3",
+          "seq": 1,
+          "revenue": 41710,
+          "operatingProfit": 2294,
+          "employees": 1121,
+          "avgSalary": 6000,
+          "segments": [
+            {
+              "name": "主力事業",
+              "value": 1032
+            },
+            {
+              "name": "関連サービス",
+              "value": 757
+            },
+            {
+              "name": "保守・その他",
+              "value": 505
+            }
+          ]
+        },
+        {
+          "label": "24/3",
+          "seq": 2,
+          "revenue": 43210,
+          "operatingProfit": 2593,
+          "employees": 1194,
+          "avgSalary": 6060,
+          "segments": [
+            {
+              "name": "主力事業",
+              "value": 1167
+            },
+            {
+              "name": "関連サービス",
+              "value": 856
+            },
+            {
+              "name": "保守・その他",
+              "value": 570
+            }
+          ]
+        },
+        {
+          "label": "25/3",
+          "seq": 3,
+          "revenue": 44770,
+          "operatingProfit": 2910,
+          "employees": 1268,
+          "avgSalary": 6120,
+          "segments": [
+            {
+              "name": "主力事業",
+              "value": 1310
+            },
+            {
+              "name": "関連サービス",
+              "value": 960
+            },
+            {
+              "name": "保守・その他",
+              "value": 640
+            }
+          ]
+        },
+        {
+          "label": "26/3",
+          "seq": 4,
+          "revenue": 46380,
+          "operatingProfit": 3247,
+          "employees": 1342,
+          "avgSalary": 6180,
+          "segments": [
+            {
+              "name": "主力事業",
+              "value": 1461
+            },
+            {
+              "name": "関連サービス",
+              "value": 1072
+            },
+            {
+              "name": "保守・その他",
+              "value": 714
+            }
+          ]
+        }
+      ],
+      "subsidies": [
+        {
+          "year": 2025,
+          "name": "IT導入補助金（複数社連携枠）",
+          "amount": 139,
+          "ratio": 0.3,
+          "source": "gbizinfo"
+        },
+        {
+          "year": 2024,
+          "name": "事業再構築補助金（成長枠）",
+          "amount": 492,
+          "ratio": 1.1,
+          "source": "gbizinfo"
+        },
+        {
+          "year": 2023,
+          "name": "キャリアアップ助成金",
+          "amount": 17,
+          "ratio": 0.04,
+          "source": "gbizinfo"
+        },
+        {
+          "year": 2022,
+          "name": "中小企業DX推進支援助成金",
+          "amount": 54,
+          "ratio": 0.13,
+          "source": "gbizinfo"
+        }
+      ],
+      "percentiles": {
+        "salary": 33,
+        "tenure": 77,
+        "growth": 25,
+        "scale": 77,
+        "finance": 58
+      }
+    },
+    {
+      "edinetCode": "E04092",
+      "corpNumber": "7010001040920",
+      "name": "株式会社リヴァータイド",
+      "nameKana": "リヴアータイド",
+      "market": "グロース",
+      "secCode": "4092",
+      "industryCode": "web",
+      "industryLabel": "Webサービス",
+      "fiscalEnd": "2026-03",
+      "filedAt": "2026-06-26",
+      "consolidated": true,
+      "employees": 158,
+      "avgSalary": 6050,
+      "avgTenure": 4.2,
+      "cash": 690,
+      "monthlyCost": 53,
+      "runway": 13.0,
+      "growth": 14.2,
+      "summary": null,
+      "tags": null,
+      "updatedAt": "2026-08-20",
+      "fiscalPeriods": [
+        {
+          "label": "22/3",
+          "seq": 0,
+          "revenue": 4740,
+          "operatingProfit": 237,
+          "employees": 123,
+          "avgSalary": 5810,
+          "segments": [
+            {
+              "name": "主力事業",
+              "value": 107
+            },
+            {
+              "name": "関連サービス",
+              "value": 78
+            },
+            {
+              "name": "保守・その他",
+              "value": 52
+            }
+          ]
+        },
+        {
+          "label": "23/3",
+          "seq": 1,
+          "revenue": 5410,
+          "operatingProfit": 298,
+          "employees": 132,
+          "avgSalary": 5870,
+          "segments": [
+            {
+              "name": "主力事業",
+              "value": 134
+            },
+            {
+              "name": "関連サービス",
+              "value": 98
+            },
+            {
+              "name": "保守・その他",
+              "value": 66
+            }
+          ]
+        },
+        {
+          "label": "24/3",
+          "seq": 2,
+          "revenue": 6180,
+          "operatingProfit": 371,
+          "employees": 141,
+          "avgSalary": 5930,
+          "segments": [
+            {
+              "name": "主力事業",
+              "value": 167
+            },
+            {
+              "name": "関連サービス",
+              "value": 122
+            },
+            {
+              "name": "保守・その他",
+              "value": 82
+            }
+          ]
+        },
+        {
+          "label": "25/3",
+          "seq": 3,
+          "revenue": 7060,
+          "operatingProfit": 459,
+          "employees": 149,
+          "avgSalary": 5990,
+          "segments": [
+            {
+              "name": "主力事業",
+              "value": 207
+            },
+            {
+              "name": "関連サービス",
+              "value": 151
+            },
+            {
+              "name": "保守・その他",
+              "value": 101
+            }
+          ]
+        },
+        {
+          "label": "26/3",
+          "seq": 4,
+          "revenue": 8060,
+          "operatingProfit": 564,
+          "employees": 158,
+          "avgSalary": 6050,
+          "segments": [
+            {
+              "name": "主力事業",
+              "value": 254
+            },
+            {
+              "name": "関連サービス",
+              "value": 186
+            },
+            {
+              "name": "保守・その他",
+              "value": 124
+            }
+          ]
+        }
+      ],
+      "subsidies": [],
+      "percentiles": {
+        "salary": 25,
+        "tenure": 23,
+        "growth": 83,
+        "scale": 15,
+        "finance": 42
+      }
+    },
+    {
+      "edinetCode": "E01908",
+      "corpNumber": "7010001019080",
+      "name": "ハヤカワ通信工業株式会社",
+      "nameKana": "ハヤカワツウシンコウギヨウ",
+      "market": "プライム",
+      "secCode": "1908",
+      "industryCode": "telecom",
+      "industryLabel": "情報通信インフラ",
+      "fiscalEnd": "2026-03",
+      "filedAt": "2026-06-26",
+      "consolidated": true,
+      "employees": 2860,
+      "avgSalary": 7240,
+      "avgTenure": 15.2,
+      "cash": 18400,
+      "monthlyCost": 742,
+      "runway": 24.8,
+      "growth": 2.4,
+      "summary": null,
+      "tags": null,
+      "updatedAt": "2026-08-20",
+      "fiscalPeriods": [
+        {
+          "label": "22/3",
+          "seq": 0,
+          "revenue": 85800,
+          "operatingProfit": 4290,
+          "employees": 2231,
+          "avgSalary": 7000,
+          "segments": [
+            {
+              "name": "主力事業",
+              "value": 1930
+            },
+            {
+              "name": "関連サービス",
+              "value": 1416
+            },
+            {
+              "name": "保守・その他",
+              "value": 944
+            }
+          ]
+        },
+        {
+          "label": "23/3",
+          "seq": 1,
+          "revenue": 87860,
+          "operatingProfit": 4832,
+          "employees": 2388,
+          "avgSalary": 7060,
+          "segments": [
+            {
+              "name": "主力事業",
+              "value": 2174
+            },
+            {
+              "name": "関連サービス",
+              "value": 1595
+            },
+            {
+              "name": "保守・その他",
+              "value": 1063
+            }
+          ]
+        },
+        {
+          "label": "24/3",
+          "seq": 2,
+          "revenue": 89970,
+          "operatingProfit": 5398,
+          "employees": 2545,
+          "avgSalary": 7120,
+          "segments": [
+            {
+              "name": "主力事業",
+              "value": 2429
+            },
+            {
+              "name": "関連サービス",
+              "value": 1781
+            },
+            {
+              "name": "保守・その他",
+              "value": 1188
+            }
+          ]
+        },
+        {
+          "label": "25/3",
+          "seq": 3,
+          "revenue": 92130,
+          "operatingProfit": 5988,
+          "employees": 2703,
+          "avgSalary": 7180,
+          "segments": [
+            {
+              "name": "主力事業",
+              "value": 2695
+            },
+            {
+              "name": "関連サービス",
+              "value": 1976
+            },
+            {
+              "name": "保守・その他",
+              "value": 1317
+            }
+          ]
+        },
+        {
+          "label": "26/3",
+          "seq": 4,
+          "revenue": 94340,
+          "operatingProfit": 6604,
+          "employees": 2860,
+          "avgSalary": 7240,
+          "segments": [
+            {
+              "name": "主力事業",
+              "value": 2972
+            },
+            {
+              "name": "関連サービス",
+              "value": 2179
+            },
+            {
+              "name": "保守・その他",
+              "value": 1453
+            }
+          ]
+        }
+      ],
+      "subsidies": [
+        {
+          "year": 2025,
+          "name": "IT導入補助金（複数社連携枠）",
+          "amount": 283,
+          "ratio": 0.3,
+          "source": "gbizinfo"
+        },
+        {
+          "year": 2024,
+          "name": "事業再構築補助金（成長枠）",
+          "amount": 1013,
+          "ratio": 1.1,
+          "source": "gbizinfo"
+        },
+        {
+          "year": 2023,
+          "name": "キャリアアップ助成金",
+          "amount": 36,
+          "ratio": 0.04,
+          "source": "gbizinfo"
+        },
+        {
+          "year": 2022,
+          "name": "中小企業DX推進支援助成金",
+          "amount": 114,
+          "ratio": 0.13,
+          "source": "gbizinfo"
+        }
+      ],
+      "percentiles": {
+        "salary": 100,
+        "tenure": 100,
+        "growth": 0,
+        "scale": 92,
+        "finance": 100
+      }
+    },
+    {
+      "edinetCode": "E03771",
+      "corpNumber": "7010001037710",
+      "name": "株式会社コトブキデジタル",
+      "nameKana": "コトブキデジタル",
+      "market": "スタンダード",
+      "secCode": "3771",
+      "industryCode": "web",
+      "industryLabel": "Webサービス",
+      "fiscalEnd": "2026-03",
+      "filedAt": "2026-06-26",
+      "consolidated": true,
+      "employees": 342,
+      "avgSalary": null,
+      "avgTenure": 6.1,
+      "cash": 1240,
+      "monthlyCost": 111,
+      "runway": 11.2,
+      "growth": 8.2,
+      "summary": null,
+      "tags": null,
+      "updatedAt": "2026-08-20",
+      "fiscalPeriods": [
+        {
+          "label": "22/3",
+          "seq": 0,
+          "revenue": 10260,
+          "operatingProfit": 513,
+          "employees": 267,
+          "avgSalary": null,
+          "segments": [
+            {
+              "name": "主力事業",
+              "value": 231
+            },
+            {
+              "name": "関連サービス",
+              "value": 169
+            },
+            {
+              "name": "保守・その他",
+              "value": 113
+            }
+          ]
+        },
+        {
+          "label": "23/3",
+          "seq": 1,
+          "revenue": 11100,
+          "operatingProfit": 610,
+          "employees": 286,
+          "avgSalary": null,
+          "segments": [
+            {
+              "name": "主力事業",
+              "value": 274
+            },
+            {
+              "name": "関連サービス",
+              "value": 201
+            },
+            {
+              "name": "保守・その他",
+              "value": 135
+            }
+          ]
+        },
+        {
+          "label": "24/3",
+          "seq": 2,
+          "revenue": 12010,
+          "operatingProfit": 721,
+          "employees": 304,
+          "avgSalary": null,
+          "segments": [
+            {
+              "name": "主力事業",
+              "value": 324
+            },
+            {
+              "name": "関連サービス",
+              "value": 238
+            },
+            {
+              "name": "保守・その他",
+              "value": 159
+            }
+          ]
+        },
+        {
+          "label": "25/3",
+          "seq": 3,
+          "revenue": 13000,
+          "operatingProfit": 845,
+          "employees": 323,
+          "avgSalary": null,
+          "segments": [
+            {
+              "name": "主力事業",
+              "value": 380
+            },
+            {
+              "name": "関連サービス",
+              "value": 279
+            },
+            {
+              "name": "保守・その他",
+              "value": 186
+            }
+          ]
+        },
+        {
+          "label": "26/3",
+          "seq": 4,
+          "revenue": 14060,
+          "operatingProfit": 984,
+          "employees": 342,
+          "avgSalary": null,
+          "segments": [
+            {
+              "name": "主力事業",
+              "value": 443
+            },
+            {
+              "name": "関連サービス",
+              "value": 325
+            },
+            {
+              "name": "保守・その他",
+              "value": 216
+            }
+          ]
+        }
+      ],
+      "subsidies": [
+        {
+          "year": 2025,
+          "name": "IT導入補助金（複数社連携枠）",
+          "amount": 42,
+          "ratio": 0.3,
+          "source": "gbizinfo"
+        },
+        {
+          "year": 2024,
+          "name": "事業再構築補助金（成長枠）",
+          "amount": 143,
+          "ratio": 1.1,
+          "source": "gbizinfo"
+        },
+        {
+          "year": 2023,
+          "name": "キャリアアップ助成金",
+          "amount": 5,
+          "ratio": 0.04,
+          "source": "gbizinfo"
+        },
+        {
+          "year": 2022,
+          "name": "中小企業DX推進支援助成金",
+          "amount": 14,
+          "ratio": 0.13,
+          "source": "gbizinfo"
+        }
+      ],
+      "percentiles": {
+        "salary": 50,
+        "tenure": 38,
+        "growth": 58,
+        "scale": 54,
+        "finance": 33
+      }
+    },
+    {
+      "edinetCode": "E02688",
+      "corpNumber": "7010001026880",
+      "name": "サガミ・ソリューションズ株式会社",
+      "nameKana": "サガミソリユーシヨンズ",
+      "market": "スタンダード",
+      "secCode": "2688",
+      "industryCode": "si",
+      "industryLabel": "SI・受託開発",
+      "fiscalEnd": "2026-03",
+      "filedAt": "2026-06-26",
+      "consolidated": true,
+      "employees": 512,
+      "avgSalary": 5720,
+      "avgTenure": 10.4,
+      "cash": 2460,
+      "monthlyCost": 168,
+      "runway": 14.6,
+      "growth": null,
+      "summary": null,
+      "tags": null,
+      "updatedAt": "2026-08-20",
+      "fiscalPeriods": [
+        {
+          "label": "22/3",
+          "seq": 0,
+          "revenue": null,
+          "operatingProfit": null,
+          "employees": 399,
+          "avgSalary": 5480,
+          "segments": []
+        },
+        {
+          "label": "23/3",
+          "seq": 1,
+          "revenue": 16140,
+          "operatingProfit": 888,
+          "employees": 428,
+          "avgSalary": 5540,
+          "segments": [
+            {
+              "name": "主力事業",
+              "value": 400
+            },
+            {
+              "name": "関連サービス",
+              "value": 293
+            },
+            {
+              "name": "保守・その他",
+              "value": 195
+            }
+          ]
+        },
+        {
+          "label": "24/3",
+          "seq": 2,
+          "revenue": 16970,
+          "operatingProfit": 1018,
+          "employees": 456,
+          "avgSalary": 5600,
+          "segments": [
+            {
+              "name": "主力事業",
+              "value": 458
+            },
+            {
+              "name": "関連サービス",
+              "value": 336
+            },
+            {
+              "name": "保守・その他",
+              "value": 224
+            }
+          ]
+        },
+        {
+          "label": "25/3",
+          "seq": 3,
+          "revenue": 17830,
+          "operatingProfit": 1159,
+          "employees": 484,
+          "avgSalary": 5660,
+          "segments": [
+            {
+              "name": "主力事業",
+              "value": 522
+            },
+            {
+              "name": "関連サービス",
+              "value": 382
+            },
+            {
+              "name": "保守・その他",
+              "value": 255
+            }
+          ]
+        },
+        {
+          "label": "26/3",
+          "seq": 4,
+          "revenue": 18740,
+          "operatingProfit": 1312,
+          "employees": 512,
+          "avgSalary": 5720,
+          "segments": [
+            {
+              "name": "主力事業",
+              "value": 590
+            },
+            {
+              "name": "関連サービス",
+              "value": 433
+            },
+            {
+              "name": "保守・その他",
+              "value": 289
+            }
+          ]
+        }
+      ],
+      "subsidies": [
+        {
+          "year": 2024,
+          "name": "IT導入補助金（複数社連携枠）",
+          "amount": 56,
+          "ratio": 0.31,
+          "source": "gbizinfo"
+        },
+        {
+          "year": 2023,
+          "name": "事業再構築補助金（成長枠）",
+          "amount": 196,
+          "ratio": 1.15,
+          "source": "gbizinfo"
+        },
+        {
+          "year": 2022,
+          "name": "キャリアアップ助成金",
+          "amount": 7,
+          "ratio": 0.04,
+          "source": "gbizinfo"
+        },
+        {
+          "year": 2021,
+          "name": "中小企業DX推進支援助成金",
+          "amount": 21,
+          "ratio": null,
+          "source": "gbizinfo"
+        }
+      ],
+      "percentiles": {
+        "salary": 0,
+        "tenure": 69,
+        "growth": 50,
+        "scale": 69,
+        "finance": 50
+      }
+    },
+    {
+      "edinetCode": "E04386",
+      "corpNumber": "7010001043860",
+      "name": "株式会社トウカイラボ",
+      "nameKana": "トウカイラボ",
+      "market": "グロース",
+      "secCode": "4386",
+      "industryCode": "software",
+      "industryLabel": "ソフトウェア開発",
+      "fiscalEnd": "2026-03",
+      "filedAt": "2026-06-26",
+      "consolidated": true,
+      "employees": 121,
+      "avgSalary": 6740,
+      "avgTenure": 3.2,
+      "cash": 380,
+      "monthlyCost": 68,
+      "runway": 5.6,
+      "growth": 15.8,
+      "summary": null,
+      "tags": null,
+      "updatedAt": "2026-08-20",
+      "fiscalPeriods": [
+        {
+          "label": "22/3",
+          "seq": 0,
+          "revenue": 3630,
+          "operatingProfit": 182,
+          "employees": 157,
+          "avgSalary": 6500,
+          "segments": [
+            {
+              "name": "主力事業",
+              "value": 82
+            },
+            {
+              "name": "関連サービス",
+              "value": 60
+            },
+            {
+              "name": "保守・その他",
+              "value": 40
+            }
+          ]
+        },
+        {
+          "label": "23/3",
+          "seq": 1,
+          "revenue": 4200,
+          "operatingProfit": 231,
+          "employees": 148,
+          "avgSalary": 6560,
+          "segments": [
+            {
+              "name": "主力事業",
+              "value": 104
+            },
+            {
+              "name": "関連サービス",
+              "value": 76
+            },
+            {
+              "name": "保守・その他",
+              "value": 51
+            }
+          ]
+        },
+        {
+          "label": "24/3",
+          "seq": 2,
+          "revenue": 4870,
+          "operatingProfit": 292,
+          "employees": 139,
+          "avgSalary": 6620,
+          "segments": [
+            {
+              "name": "主力事業",
+              "value": 131
+            },
+            {
+              "name": "関連サービス",
+              "value": 96
+            },
+            {
+              "name": "保守・その他",
+              "value": 65
+            }
+          ]
+        },
+        {
+          "label": "25/3",
+          "seq": 3,
+          "revenue": 5640,
+          "operatingProfit": 367,
+          "employees": 130,
+          "avgSalary": 6680,
+          "segments": [
+            {
+              "name": "主力事業",
+              "value": 165
+            },
+            {
+              "name": "関連サービス",
+              "value": 121
+            },
+            {
+              "name": "保守・その他",
+              "value": 81
+            }
+          ]
+        },
+        {
+          "label": "26/3",
+          "seq": 4,
+          "revenue": 6530,
+          "operatingProfit": 457,
+          "employees": 121,
+          "avgSalary": 6740,
+          "segments": [
+            {
+              "name": "主力事業",
+              "value": 206
+            },
+            {
+              "name": "関連サービス",
+              "value": 151
+            },
+            {
+              "name": "保守・その他",
+              "value": 100
+            }
+          ]
+        }
+      ],
+      "subsidies": [
+        {
+          "year": 2025,
+          "name": "IT導入補助金（複数社連携枠）",
+          "amount": 20,
+          "ratio": 0.31,
+          "source": "gbizinfo"
+        },
+        {
+          "year": 2024,
+          "name": "事業再構築補助金（成長枠）",
+          "amount": 62,
+          "ratio": 1.1,
+          "source": "gbizinfo"
+        },
+        {
+          "year": 2023,
+          "name": "キャリアアップ助成金",
+          "amount": 2,
+          "ratio": 0.04,
+          "source": "gbizinfo"
+        },
+        {
+          "year": 2022,
+          "name": "中小企業DX推進支援助成金",
+          "amount": 5,
+          "ratio": 0.12,
+          "source": "gbizinfo"
+        }
+      ],
+      "percentiles": {
+        "salary": 67,
+        "tenure": 8,
+        "growth": 92,
+        "scale": 8,
+        "finance": 17
+      }
+    },
+    {
+      "edinetCode": "E01922",
+      "corpNumber": "7010001019220",
+      "name": "ミヤコネットワークス株式会社",
+      "nameKana": "ミヤコネツトワークス",
+      "market": "プライム",
+      "secCode": "1922",
+      "industryCode": "telecom",
+      "industryLabel": "情報通信インフラ",
+      "fiscalEnd": "2026-03",
+      "filedAt": "2026-06-26",
+      "consolidated": true,
+      "employees": 1810,
+      "avgSalary": 6960,
+      "avgTenure": 14.1,
+      "cash": 9800,
+      "monthlyCost": 497,
+      "runway": 19.7,
+      "growth": 3.1,
+      "summary": null,
+      "tags": null,
+      "updatedAt": "2026-08-20",
+      "fiscalPeriods": [
+        {
+          "label": "22/3",
+          "seq": 0,
+          "revenue": 54300,
+          "operatingProfit": 2715,
+          "employees": 1412,
+          "avgSalary": 6720,
+          "segments": [
+            {
+              "name": "主力事業",
+              "value": 1222
+            },
+            {
+              "name": "関連サービス",
+              "value": 896
+            },
+            {
+              "name": "保守・その他",
+              "value": 597
+            }
+          ]
+        },
+        {
+          "label": "23/3",
+          "seq": 1,
+          "revenue": 55980,
+          "operatingProfit": 3079,
+          "employees": 1511,
+          "avgSalary": 6780,
+          "segments": [
+            {
+              "name": "主力事業",
+              "value": 1386
+            },
+            {
+              "name": "関連サービス",
+              "value": 1016
+            },
+            {
+              "name": "保守・その他",
+              "value": 677
+            }
+          ]
+        },
+        {
+          "label": "24/3",
+          "seq": 2,
+          "revenue": 57720,
+          "operatingProfit": 3463,
+          "employees": 1611,
+          "avgSalary": 6840,
+          "segments": [
+            {
+              "name": "主力事業",
+              "value": 1558
+            },
+            {
+              "name": "関連サービス",
+              "value": 1143
+            },
+            {
+              "name": "保守・その他",
+              "value": 762
+            }
+          ]
+        },
+        {
+          "label": "25/3",
+          "seq": 3,
+          "revenue": 59510,
+          "operatingProfit": 3868,
+          "employees": 1710,
+          "avgSalary": 6900,
+          "segments": [
+            {
+              "name": "主力事業",
+              "value": 1741
+            },
+            {
+              "name": "関連サービス",
+              "value": 1276
+            },
+            {
+              "name": "保守・その他",
+              "value": 851
+            }
+          ]
+        },
+        {
+          "label": "26/3",
+          "seq": 4,
+          "revenue": 61350,
+          "operatingProfit": 4294,
+          "employees": 1810,
+          "avgSalary": 6960,
+          "segments": [
+            {
+              "name": "主力事業",
+              "value": 1932
+            },
+            {
+              "name": "関連サービス",
+              "value": 1417
+            },
+            {
+              "name": "保守・その他",
+              "value": 945
+            }
+          ]
+        }
+      ],
+      "subsidies": [
+        {
+          "year": 2025,
+          "name": "IT導入補助金（複数社連携枠）",
+          "amount": 184,
+          "ratio": 0.3,
+          "source": "gbizinfo"
+        },
+        {
+          "year": 2024,
+          "name": "事業再構築補助金（成長枠）",
+          "amount": 655,
+          "ratio": 1.1,
+          "source": "gbizinfo"
+        },
+        {
+          "year": 2023,
+          "name": "キャリアアップ助成金",
+          "amount": 23,
+          "ratio": 0.04,
+          "source": "gbizinfo"
+        },
+        {
+          "year": 2022,
+          "name": "中小企業DX推進支援助成金",
+          "amount": 73,
+          "ratio": 0.13,
+          "source": "gbizinfo"
+        }
+      ],
+      "percentiles": {
+        "salary": 83,
+        "tenure": 92,
+        "growth": 17,
+        "scale": 85,
+        "finance": 75
+      }
+    },
+    {
+      "edinetCode": "E04155",
+      "corpNumber": "7010001041550",
+      "name": "株式会社シラハマデータ",
+      "nameKana": "シラハマデータ",
+      "market": "スタンダード",
+      "secCode": "4155",
+      "industryCode": "software",
+      "industryLabel": "ソフトウェア開発",
+      "fiscalEnd": "2026-03",
+      "filedAt": "2026-06-26",
+      "consolidated": true,
+      "employees": 224,
+      "avgSalary": 6210,
+      "avgTenure": 7.6,
+      "cash": 1120,
+      "monthlyCost": null,
+      "runway": null,
+      "growth": 7.4,
+      "summary": null,
+      "tags": null,
+      "updatedAt": "2026-08-20",
+      "fiscalPeriods": [
+        {
+          "label": "22/3",
+          "seq": 0,
+          "revenue": 6720,
+          "operatingProfit": 336,
+          "employees": 175,
+          "avgSalary": 5970,
+          "segments": [
+            {
+              "name": "主力事業",
+              "value": 151
+            },
+            {
+              "name": "関連サービス",
+              "value": 111
+            },
+            {
+              "name": "保守・その他",
+              "value": 74
+            }
+          ]
+        },
+        {
+          "label": "23/3",
+          "seq": 1,
+          "revenue": 7220,
+          "operatingProfit": 397,
+          "employees": 187,
+          "avgSalary": 6030,
+          "segments": [
+            {
+              "name": "主力事業",
+              "value": 179
+            },
+            {
+              "name": "関連サービス",
+              "value": 131
+            },
+            {
+              "name": "保守・その他",
+              "value": 87
+            }
+          ]
+        },
+        {
+          "label": "24/3",
+          "seq": 2,
+          "revenue": 7750,
+          "operatingProfit": 465,
+          "employees": 199,
+          "avgSalary": 6090,
+          "segments": [
+            {
+              "name": "主力事業",
+              "value": 209
+            },
+            {
+              "name": "関連サービス",
+              "value": 153
+            },
+            {
+              "name": "保守・その他",
+              "value": 103
+            }
+          ]
+        },
+        {
+          "label": "25/3",
+          "seq": 3,
+          "revenue": 8320,
+          "operatingProfit": 541,
+          "employees": 212,
+          "avgSalary": 6150,
+          "segments": [
+            {
+              "name": "主力事業",
+              "value": 243
+            },
+            {
+              "name": "関連サービス",
+              "value": 179
+            },
+            {
+              "name": "保守・その他",
+              "value": 119
+            }
+          ]
+        },
+        {
+          "label": "26/3",
+          "seq": 4,
+          "revenue": 8940,
+          "operatingProfit": 626,
+          "employees": 224,
+          "avgSalary": 6210,
+          "segments": [
+            {
+              "name": "主力事業",
+              "value": 282
+            },
+            {
+              "name": "関連サービス",
+              "value": 207
+            },
+            {
+              "name": "保守・その他",
+              "value": 137
+            }
+          ]
+        }
+      ],
+      "subsidies": [
+        {
+          "year": 2025,
+          "name": "IT導入補助金（複数社連携枠）",
+          "amount": 27,
+          "ratio": 0.3,
+          "source": "gbizinfo"
+        },
+        {
+          "year": 2024,
+          "name": "事業再構築補助金（成長枠）",
+          "amount": 92,
+          "ratio": 1.11,
+          "source": "gbizinfo"
+        },
+        {
+          "year": 2023,
+          "name": "キャリアアップ助成金",
+          "amount": 3,
+          "ratio": 0.04,
+          "source": "gbizinfo"
+        },
+        {
+          "year": 2022,
+          "name": "中小企業DX推進支援助成金",
+          "amount": 9,
+          "ratio": 0.12,
+          "source": "gbizinfo"
+        }
+      ],
+      "percentiles": {
+        "salary": 42,
+        "tenure": 46,
+        "growth": 50,
+        "scale": 31,
+        "finance": 50
+      }
+    },
+    {
+      "edinetCode": "E09455",
+      "corpNumber": "7010001094550",
+      "name": "オオタキ・インテグレーション株式会社",
+      "nameKana": "オオタキインテグレーシヨン",
+      "market": "プライム",
+      "secCode": "9455",
+      "industryCode": "si",
+      "industryLabel": "SI・受託開発",
+      "fiscalEnd": "2026-03",
+      "filedAt": "2026-06-26",
+      "consolidated": true,
+      "employees": 3120,
+      "avgSalary": 7080,
+      "avgTenure": 13.8,
+      "cash": 21200,
+      "monthlyCost": 946,
+      "runway": 22.4,
+      "growth": 2.9,
+      "summary": null,
+      "tags": null,
+      "updatedAt": "2026-08-20",
+      "fiscalPeriods": [
+        {
+          "label": "22/3",
+          "seq": 0,
+          "revenue": 93600,
+          "operatingProfit": 4680,
+          "employees": 2434,
+          "avgSalary": 6840,
+          "segments": [
+            {
+              "name": "主力事業",
+              "value": 2106
+            },
+            {
+              "name": "関連サービス",
+              "value": 1544
+            },
+            {
+              "name": "保守・その他",
+              "value": 1030
+            }
+          ]
+        },
+        {
+          "label": "23/3",
+          "seq": 1,
+          "revenue": 96310,
+          "operatingProfit": 5297,
+          "employees": 2605,
+          "avgSalary": 6900,
+          "segments": [
+            {
+              "name": "主力事業",
+              "value": 2384
+            },
+            {
+              "name": "関連サービス",
+              "value": 1748
+            },
+            {
+              "name": "保守・その他",
+              "value": 1165
+            }
+          ]
+        },
+        {
+          "label": "24/3",
+          "seq": 2,
+          "revenue": 99110,
+          "operatingProfit": 5947,
+          "employees": 2777,
+          "avgSalary": 6960,
+          "segments": [
+            {
+              "name": "主力事業",
+              "value": 2676
+            },
+            {
+              "name": "関連サービス",
+              "value": 1963
+            },
+            {
+              "name": "保守・その他",
+              "value": 1308
+            }
+          ]
+        },
+        {
+          "label": "25/3",
+          "seq": 3,
+          "revenue": 101980,
+          "operatingProfit": 6629,
+          "employees": 2948,
+          "avgSalary": 7020,
+          "segments": [
+            {
+              "name": "主力事業",
+              "value": 2983
+            },
+            {
+              "name": "関連サービス",
+              "value": 2188
+            },
+            {
+              "name": "保守・その他",
+              "value": 1458
+            }
+          ]
+        },
+        {
+          "label": "26/3",
+          "seq": 4,
+          "revenue": 104940,
+          "operatingProfit": 7346,
+          "employees": 3120,
+          "avgSalary": 7080,
+          "segments": [
+            {
+              "name": "主力事業",
+              "value": 3306
+            },
+            {
+              "name": "関連サービス",
+              "value": 2424
+            },
+            {
+              "name": "保守・その他",
+              "value": 1616
+            }
+          ]
+        }
+      ],
+      "subsidies": [
+        {
+          "year": 2025,
+          "name": "IT導入補助金（複数社連携枠）",
+          "amount": 315,
+          "ratio": 0.3,
+          "source": "gbizinfo"
+        },
+        {
+          "year": 2024,
+          "name": "事業再構築補助金（成長枠）",
+          "amount": 1122,
+          "ratio": 1.1,
+          "source": "gbizinfo"
+        },
+        {
+          "year": 2023,
+          "name": "キャリアアップ助成金",
+          "amount": 40,
+          "ratio": 0.04,
+          "source": "gbizinfo"
+        },
+        {
+          "year": 2022,
+          "name": "中小企業DX推進支援助成金",
+          "amount": 125,
+          "ratio": 0.13,
+          "source": "gbizinfo"
+        }
+      ],
+      "percentiles": {
+        "salary": 92,
+        "tenure": 85,
+        "growth": 8,
+        "scale": 100,
+        "finance": 92
+      }
+    },
+    {
+      "edinetCode": "E04021",
+      "corpNumber": "7010001040210",
+      "name": "株式会社カザハヤ工房",
+      "nameKana": "カザハヤコウボウ",
+      "market": "グロース",
+      "secCode": "4021",
+      "industryCode": "web",
+      "industryLabel": "Webサービス",
+      "fiscalEnd": "2026-03",
+      "filedAt": "2026-06-26",
+      "consolidated": true,
+      "employees": 86,
+      "avgSalary": 5980,
+      "avgTenure": 2.8,
+      "cash": 190,
+      "monthlyCost": 56,
+      "runway": 3.4,
+      "growth": 12.6,
+      "summary": null,
+      "tags": null,
+      "updatedAt": "2026-08-20",
+      "fiscalPeriods": [
+        {
+          "label": "22/3",
+          "seq": 0,
+          "revenue": 2580,
+          "operatingProfit": 129,
+          "employees": 67,
+          "avgSalary": 5740,
+          "segments": [
+            {
+              "name": "主力事業",
+              "value": 58
+            },
+            {
+              "name": "関連サービス",
+              "value": 43
+            },
+            {
+              "name": "保守・その他",
+              "value": 28
+            }
+          ]
+        },
+        {
+          "label": "23/3",
+          "seq": 1,
+          "revenue": 2910,
+          "operatingProfit": 160,
+          "employees": 72,
+          "avgSalary": 5800,
+          "segments": [
+            {
+              "name": "主力事業",
+              "value": 72
+            },
+            {
+              "name": "関連サービス",
+              "value": 53
+            },
+            {
+              "name": "保守・その他",
+              "value": 35
+            }
+          ]
+        },
+        {
+          "label": "24/3",
+          "seq": 2,
+          "revenue": 3270,
+          "operatingProfit": 196,
+          "employees": 77,
+          "avgSalary": 5860,
+          "segments": [
+            {
+              "name": "主力事業",
+              "value": 88
+            },
+            {
+              "name": "関連サービス",
+              "value": 65
+            },
+            {
+              "name": "保守・その他",
+              "value": 43
+            }
+          ]
+        },
+        {
+          "label": "25/3",
+          "seq": 3,
+          "revenue": 3680,
+          "operatingProfit": 239,
+          "employees": 81,
+          "avgSalary": 5920,
+          "segments": [
+            {
+              "name": "主力事業",
+              "value": 108
+            },
+            {
+              "name": "関連サービス",
+              "value": 79
+            },
+            {
+              "name": "保守・その他",
+              "value": 52
+            }
+          ]
+        },
+        {
+          "label": "26/3",
+          "seq": 4,
+          "revenue": 4150,
+          "operatingProfit": 290,
+          "employees": 86,
+          "avgSalary": 5980,
+          "segments": [
+            {
+              "name": "主力事業",
+              "value": 130
+            },
+            {
+              "name": "関連サービス",
+              "value": 96
+            },
+            {
+              "name": "保守・その他",
+              "value": 64
+            }
+          ]
+        }
+      ],
+      "subsidies": [
+        {
+          "year": 2025,
+          "name": "IT導入補助金（複数社連携枠）",
+          "amount": 12,
+          "ratio": 0.29,
+          "source": "gbizinfo"
+        },
+        {
+          "year": 2024,
+          "name": "事業再構築補助金（成長枠）",
+          "amount": 40,
+          "ratio": 1.09,
+          "source": "gbizinfo"
+        },
+        {
+          "year": 2023,
+          "name": "キャリアアップ助成金",
+          "amount": 1,
+          "ratio": 0.03,
+          "source": "gbizinfo"
+        },
+        {
+          "year": 2022,
+          "name": "中小企業DX推進支援助成金",
+          "amount": 4,
+          "ratio": 0.14,
+          "source": "gbizinfo"
+        }
+      ],
+      "percentiles": {
+        "salary": 17,
+        "tenure": 0,
+        "growth": 75,
+        "scale": 0,
+        "finance": 0
+      }
+    }
+  ],
+  "industryStats": [
+    {
+      "industryCode": "si",
+      "industryLabel": "SI・受託開発",
+      "companyCount": 4,
+      "medianSalary": 6250.0,
+      "medianTenure": 11.5
+    },
+    {
+      "industryCode": "software",
+      "industryLabel": "ソフトウェア開発",
+      "companyCount": 4,
+      "medianSalary": 6610.0,
+      "medianTenure": 6.699999999999999
+    },
+    {
+      "industryCode": "telecom",
+      "industryLabel": "情報通信インフラ",
+      "companyCount": 2,
+      "medianSalary": 7100.0,
+      "medianTenure": 14.649999999999999
+    },
+    {
+      "industryCode": "web",
+      "industryLabel": "Webサービス",
+      "companyCount": 4,
+      "medianSalary": 5980,
+      "medianTenure": 4.05
+    }
+  ]
+}

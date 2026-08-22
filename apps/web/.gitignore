@@ -1,0 +1,10 @@
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+next-env.d.ts
+public/search-index.json
+
+.env
+.env.*
+!.env.example

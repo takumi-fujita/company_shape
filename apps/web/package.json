@@ -1,0 +1,31 @@
+{
+  "name": "@kaisha/web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "test": "vitest run",
+    "prebuild": "node scripts/build-search-index.mjs",
+    "predev": "node scripts/build-search-index.mjs",
+    "postbuild": "node scripts/build-sitemap-index.mjs",
+    "check": "node scripts/check-banned-words.mjs && vitest run && next build && node scripts/check-bundle-budget.mjs",
+    "lint:words": "node scripts/check-banned-words.mjs",
+    "check:budget": "node scripts/check-bundle-budget.mjs"
+  },
+  "dependencies": {
+    "next": "^15.5.23",
+    "react": "19.1.1",
+    "react-dom": "19.1.1",
+    "server-only": "^0.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "22.10.2",
+    "@types/react": "19.1.8",
+    "@types/react-dom": "19.1.6",
+    "typescript": "5.7.3",
+    "vitest": "^3.2.7"
+  }
+}

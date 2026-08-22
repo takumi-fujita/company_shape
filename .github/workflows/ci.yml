@@ -1,0 +1,86 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  secrets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # .gitignore に穴が空いても、認証情報が追跡され始めたらここで気づく。
+      # 追跡済みファイルは .gitignore が効かないので、検査は git ls-files に対して行う。
+      - name: 認証情報が追跡されていないこと
+        run: |
+          tracked=$(git ls-files | grep -E '(^|/)(\.env|env)(\.[^/]*)?$' | grep -v '\.example$' || true)
+          if [ -n "$tracked" ]; then
+            echo "認証情報とみられるファイルが追跡されています:"
+            echo "$tracked"
+            exit 1
+          fi
+          echo "secrets: ok"
+
+  web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - run: npm ci
+
+      # 法務ガードレール: 評価語が 1 語でも入っていたら落とす（ハンドオフ §9-1）
+      - name: 禁止語チェック
+        run: npm run lint:words
+
+      - name: ユニットテスト
+        run: npm test
+
+      # SSG スモークテスト: 全ページのビルドが 1 社も落ちずに完走すること（§10）
+      - name: SSG ビルド
+        run: npm run build
+
+      # パフォーマンス予算: 1 ページあたり JS 150KB gzip / 検索インデックス 2MB gzip
+      - name: パフォーマンス予算
+        run: npm run check:budget
+
+  pipeline:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      # 抽出・store・補助金・要約ガード・オーケストレータまで、すべてネットワーク不要で回る
+      # AI 要約ガードのテスト（評価語が 1 語も通過しないこと）もここに含まれる
+      - name: ETL のテスト
+        run: python -m unittest discover -s pipeline/tests
+      - name: フィクスチャが再生成できること（冪等性）
+        run: |
+          python pipeline/seed_fixtures.py
+          git diff --exit-code fixtures/companies.json
+
+      # 合成 XBRL を実 ETL 経路に流し、その出力でフロントが 1 社も落ちずにビルドできること
+      - name: ETL 出力での SSG スモークテスト
+        run: |
+          python pipeline/dev_synthetic.py --db /tmp/synthetic.db --count 60
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - run: npm ci
+        working-directory: apps/web
+      - run: COMPANIES_DB=/tmp/synthetic.db npm run build
+        working-directory: apps/web
+
+      # 配信前の関門が ETL の出力に対しても通ること
+      - name: DB 健全性チェック
+        run: python ops/verify_db.py /tmp/synthetic.db

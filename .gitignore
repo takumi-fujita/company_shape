@@ -1,0 +1,28 @@
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+next-env.d.ts
+apps/web/public/search-index.json
+
+# SQLite 本体はコミットする。WAL / SHM は生成物なので除外。
+data/*.db-wal
+data/*.db-shm
+
+pipeline/logs/
+__pycache__/
+*.pyc
+.DS_Store
+pipeline/cache/
+
+# 認証情報。雛形（ops/env.example / apps/web/.env.example）だけコミットする。
+#
+# ETL の実体は ~/.config/kaisha-no-katachi/env（XDG に合わせてドット無し）に置くので
+# 本来リポジトリには入らない。ただし雛形を「その場でコピーして編集」する事故が
+# 一番起きやすいので、ドット無しの env / env.local も無視する。
+.env
+.env.*
+env
+env.local
+!.env.example
+!ops/env.example

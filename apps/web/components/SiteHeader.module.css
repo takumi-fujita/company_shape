@@ -1,0 +1,84 @@
+.header {
+  background: var(--brand);
+  border-bottom: 1px solid var(--hairline);
+  position: sticky;
+  top: 0;
+  z-index: 30;
+}
+
+.inner {
+  max-width: var(--content-width);
+  margin: 0 auto;
+  padding: 16px 20px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 20px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+}
+
+.brand:hover {
+  text-decoration: none;
+}
+
+.brandText {
+  display: flex;
+  flex-direction: column;
+}
+
+.logo {
+  font-size: 17px;
+  font-weight: 500;
+  color: var(--brand-text);
+  letter-spacing: 0.02em;
+}
+
+.tagline {
+  font-size: 11px;
+  color: var(--brand-text);
+  opacity: 0.8;
+}
+
+.form {
+  flex: 1;
+  min-width: 240px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.input {
+  flex: 1;
+  min-width: 0;
+  height: 40px;
+  padding: 0 16px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--hairline);
+  background: var(--field);
+  color: var(--ink);
+  font-size: 14px;
+  outline: none;
+}
+
+.input::placeholder {
+  color: var(--ink-muted);
+}
+
+.submit {
+  height: 40px;
+  padding: 0 20px;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: var(--accent);
+  color: var(--on-accent);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+}

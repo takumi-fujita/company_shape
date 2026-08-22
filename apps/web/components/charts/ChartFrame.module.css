@@ -1,0 +1,29 @@
+.frame {
+  position: relative;
+}
+
+.svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.labels {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.label {
+  position: absolute;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+/* 折れ線の値が棒に重なるときの白チップ。 */
+.chip {
+  background: var(--panel);
+  padding: 1px 4px;
+  border-radius: 4px;
+}

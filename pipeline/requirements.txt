@@ -1,0 +1,5 @@
+# ETL の依存。標準ライブラリで足りる部分は増やさない方針。
+# XBRL は xml.etree で読み、HTTP は urllib、SQLite は sqlite3 を使う。
+
+# AI 要約の生成にだけ必要。要約を回さないなら未インストールでも他フェーズは動く。
+anthropic>=1.0

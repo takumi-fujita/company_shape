@@ -1,0 +1,22 @@
+/* 閾値超過のときだけ出る小さなピル。行やカードの面を警告色で塗らない。 */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  line-height: 1.5;
+  padding: 1px 8px;
+  border-radius: var(--radius-pill);
+  white-space: nowrap;
+}
+
+.warn {
+  background: var(--warn-bg);
+  color: var(--warn-text);
+  border: 1px solid var(--warn-line);
+}
+
+.alert {
+  background: var(--alert-bg);
+  color: var(--alert-text);
+  border: 1px solid var(--alert-line);
+}

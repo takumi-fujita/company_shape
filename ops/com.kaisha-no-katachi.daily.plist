@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  日次更新の launchd 設定（cron の代替）。
+
+  cron でも動くが、launchd を勧める理由:
+  - スリープや再起動でジョブを取りこぼしたとき、復帰後に一度だけ走らせてくれる
+    （RunAtLoad + StartCalendarInterval）。
+  - 標準出力・標準エラーの行き先を設定で持てる。
+  - macOS の TCC（フルディスクアクセス）の権限が LaunchAgent 単位で扱える。
+
+  設置:
+    cp ops/com.kaisha-no-katachi.daily.plist ~/Library/LaunchAgents/
+    # 下の PATH と WorkingDirectory を実際のパスに書き換えてから
+    launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.kaisha-no-katachi.daily.plist
+    launchctl kickstart -p gui/$(id -u)/com.kaisha-no-katachi.daily   # 手動で 1 回流す
+
+  停止:
+    launchctl bootout gui/$(id -u)/com.kaisha-no-katachi.daily
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.kaisha-no-katachi.daily</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>-lc</string>
+    <!-- ここのパスを実際のリポジトリの場所に書き換える -->
+    <string>/Users/USERNAME/Workspace/company_shape/ops/daily-update.sh</string>
+  </array>
+
+  <key>WorkingDirectory</key>
+  <string>/Users/USERNAME/Workspace/company_shape</string>
+
+  <!-- 毎日 5:00 JST -->
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Hour</key><integer>5</integer>
+    <key>Minute</key><integer>0</integer>
+  </dict>
+
+  <!-- 5:00 を跨いで停止していた場合、復帰後に一度だけ流す -->
+  <key>RunAtLoad</key>
+  <false/>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+    <!-- API キーはここに書かない。~/.config/kaisha-no-katachi/env を daily-update.sh が読む -->
+  </dict>
+
+  <key>StandardOutPath</key>
+  <string>/Users/USERNAME/Workspace/company_shape/pipeline/logs/launchd.out.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/USERNAME/Workspace/company_shape/pipeline/logs/launchd.err.log</string>
+
+  <!-- ネットワークが来るまで待つ -->
+  <key>ProcessType</key>
+  <string>Background</string>
+</dict>
+</plist>

@@ -1,0 +1,64 @@
+name: Deploy
+
+# main への push を検知してビルドし、Cloudflare Pages に配信する。
+# 日次 ETL（Mac mini）が data/companies.db を push すると、ここが自動で回る。
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/web/**'
+      - 'data/companies.db'
+      - 'fixtures/companies.json'
+      - '.github/workflows/deploy.yml'
+  workflow_dispatch:
+
+concurrency:
+  # 日次 push が重なっても最新の 1 本だけを流す
+  group: deploy
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      deployments: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+
+      - run: npm ci
+        working-directory: apps/web
+
+      # 配信前の最終防衛線。落ちたらデプロイしない。
+      - name: 禁止語チェック
+        run: npm run lint:words
+        working-directory: apps/web
+
+      - name: ユニットテスト
+        run: npm test
+        working-directory: apps/web
+
+      # SSG スモークテスト: 全ページのビルドが 1 社も落ちずに完走すること
+      - name: ビルド
+        run: npm run build
+        working-directory: apps/web
+        env:
+          NEXT_PUBLIC_SITE_URL: ${{ vars.SITE_URL }}
+
+      - name: パフォーマンス予算
+        run: npm run check:budget
+        working-directory: apps/web
+
+      - name: Cloudflare Pages へデプロイ
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy out --project-name=kaisha-no-katachi --branch=main
+          workingDirectory: apps/web

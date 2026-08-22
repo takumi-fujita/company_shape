@@ -1,0 +1,640 @@
+.main {
+  max-width: var(--content-width);
+  margin: 0 auto;
+  padding: 24px 20px 72px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* 1. パンくず / 見出し */
+.headBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+
+.breadcrumbCurrent {
+  color: var(--ink-sub);
+}
+
+.h1 {
+  font-size: 26px;
+  font-weight: 500;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+  text-wrap: pretty;
+}
+
+.subMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  font-size: 12px;
+  color: var(--ink-sub);
+}
+
+.sourceMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  font-size: 11px;
+  color: var(--ink-muted);
+}
+
+/* 2. データくんの帯 */
+.band {
+  background: var(--brand);
+  border-radius: var(--radius-panel);
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.bandText {
+  display: flex;
+  flex-direction: column;
+}
+
+.bandTitle {
+  font-size: 17px;
+  font-weight: 500;
+  color: var(--brand-text);
+}
+
+.bandSub {
+  font-size: 13px;
+  color: var(--brand-text);
+  opacity: 0.85;
+}
+
+/* 共通セクション */
+.section {
+  background: var(--panel);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-panel);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sectionTight {
+  gap: 6px;
+}
+
+.h2 {
+  font-size: 17px;
+  font-weight: 500;
+}
+
+.sectionLead {
+  font-size: 12px;
+  color: var(--ink-sub);
+  text-wrap: pretty;
+}
+
+.headRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.titleStack {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.iconRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* 2 カラム */
+.cols2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.radarCols {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.cols4 {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.colsPeer {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+@media (max-width: 759px) {
+  .cols2,
+  .radarCols,
+  .colsPeer {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+  }
+  .cols4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* 3. レーダー */
+.radarSide {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.legend {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--ink-sub);
+}
+
+.legendItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.legendRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  font-size: 12px;
+  color: var(--ink-sub);
+}
+
+.swatchSolid {
+  width: 22px;
+  height: 2px;
+  background: var(--accent);
+  display: inline-block;
+}
+
+.swatchDashed {
+  width: 22px;
+  height: 0;
+  border-top: 2px dashed var(--chart-mid);
+  display: inline-block;
+}
+
+.swatchBox {
+  width: 11px;
+  height: 11px;
+  border-radius: 3px;
+  display: inline-block;
+}
+
+.swatchLine {
+  width: 18px;
+  height: 2px;
+  display: inline-block;
+}
+
+.swatchLineDashed {
+  width: 18px;
+  height: 0;
+  border-top: 2px dashed var(--chart-line);
+  display: inline-block;
+}
+
+.radarSummary {
+  background: var(--accent-soft);
+  border-radius: var(--radius-card);
+  padding: 12px 14px;
+  font-size: 13px;
+  color: var(--ink);
+  text-wrap: pretty;
+}
+
+.footnote {
+  font-size: 11px;
+  color: var(--ink-muted);
+  text-wrap: pretty;
+}
+
+/* 4. スコアカード */
+.score {
+  background: var(--card);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-card);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 132px;
+}
+
+.scoreWarn {
+  background: var(--warn-bg);
+  border-color: var(--warn-line);
+}
+
+.scoreAlert {
+  background: var(--alert-bg);
+  border-color: var(--alert-line);
+}
+
+.scoreLabel {
+  font-size: 12px;
+  color: var(--ink-sub);
+}
+
+.scoreValueRow {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+}
+
+.scoreValue {
+  font-size: 30px;
+  font-weight: 500;
+  line-height: 1.1;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.scoreUnit {
+  font-size: 12px;
+  color: var(--ink-sub);
+}
+
+.scoreFoot {
+  margin-top: auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.scoreSub {
+  font-size: 12px;
+  color: var(--ink-sub);
+  font-variant-numeric: tabular-nums;
+}
+
+/* 5. 免責 */
+.disclaimer {
+  font-size: 12px;
+  color: var(--ink-muted);
+  text-wrap: pretty;
+}
+
+/* 6. 欠損の案内 */
+.missing {
+  background: var(--card);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-panel);
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.missingText {
+  font-size: 13px;
+  color: var(--ink-sub);
+  text-wrap: pretty;
+}
+
+/* 7. AI 要約 */
+.summaryBody {
+  background: var(--accent-soft);
+  border-radius: var(--radius-card);
+  padding: 14px 16px;
+  font-size: 13px;
+  color: var(--ink);
+  text-wrap: pretty;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tag {
+  font-size: 12px;
+  padding: 3px 12px;
+  border-radius: var(--radius-pill);
+  background: var(--kw-bg);
+  color: var(--kw-text);
+}
+
+/* 8. 数字のまとめ */
+.notes {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.noteItem {
+  display: flex;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--ink);
+  text-wrap: pretty;
+}
+
+.noteDot {
+  flex: 0 0 7px;
+  width: 7px;
+  height: 7px;
+  border-radius: var(--radius-pill);
+  background: var(--accent);
+  margin-top: 8px;
+}
+
+/* グラフ下の要約行 */
+.metaRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 20px;
+  font-size: 12px;
+  color: var(--ink-sub);
+  font-variant-numeric: tabular-nums;
+}
+
+/* 数値テーブル（760px 未満のグラフ差し替え） */
+.dataTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.dataTh,
+.dataThNum {
+  padding: 8px 0;
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--ink-muted);
+  border-bottom: 1px solid var(--hairline);
+}
+
+.dataTh {
+  text-align: left;
+}
+
+.dataThNum {
+  text-align: right;
+}
+
+.dataTd,
+.dataTdNum {
+  padding: 10px 0;
+  font-size: 13px;
+  border-bottom: 1px solid var(--hairline);
+  font-variant-numeric: tabular-nums;
+}
+
+.dataTd {
+  color: var(--ink-sub);
+}
+
+.dataTdNum {
+  color: var(--ink);
+  text-align: right;
+}
+
+/* 11. 補助金 */
+.tableSection {
+  background: var(--panel);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-panel);
+  overflow: hidden;
+}
+
+.tableHead {
+  padding: 20px 20px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.scrollX {
+  overflow-x: auto;
+}
+
+.subsidyTable {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 520px;
+}
+
+.subTh,
+.subThNum {
+  padding: 12px;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--ink-muted);
+  border-top: 1px solid var(--hairline);
+  border-bottom: 1px solid var(--hairline);
+}
+
+.subTh {
+  text-align: left;
+}
+
+.subThNum {
+  text-align: right;
+}
+
+.padLeft {
+  padding-left: 20px;
+}
+
+.padRight {
+  padding-right: 20px;
+}
+
+.subTd,
+.subTdNum {
+  padding: 12px;
+  font-size: 13px;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.subTd {
+  color: var(--ink);
+}
+
+.subTdMuted {
+  color: var(--ink-sub);
+  white-space: nowrap;
+}
+
+.subTdNum {
+  color: var(--ink);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.subTotalLabel {
+  padding: 12px 20px;
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+
+.subTotalValue {
+  padding: 12px;
+  font-size: 13px;
+  color: var(--ink);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.emptyRow {
+  padding: 16px 20px;
+  font-size: 13px;
+  color: var(--ink-sub);
+  border-top: 1px solid var(--hairline);
+}
+
+/* 12. 一次情報 */
+.sourceCard {
+  background: var(--card);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-card);
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sourceTitle {
+  font-size: 14px;
+  color: var(--ink);
+}
+
+.sourceDesc {
+  font-size: 12px;
+  color: var(--ink-sub);
+  text-wrap: pretty;
+}
+
+.sourceLink {
+  font-size: 13px;
+  margin-top: auto;
+}
+
+/* 13. 広告枠（ファーストビュー外） */
+.ad {
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-card);
+  padding: 14px 16px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  background: var(--card);
+}
+
+.adBadge {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--ink-muted);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-pill);
+  padding: 1px 8px;
+}
+
+.adText {
+  font-size: 13px;
+  color: var(--ink-sub);
+  flex: 1;
+  min-width: 200px;
+}
+
+/* 14. 同じ業種の会社 */
+.plainSection {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.peer {
+  background: var(--panel);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-card);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: background-color 0.12s ease;
+  text-decoration: none;
+}
+
+.peer:hover {
+  background: var(--brand);
+  text-decoration: none;
+}
+
+.peerName {
+  font-size: 14px;
+  color: var(--ink);
+}
+
+.peerStats {
+  font-size: 12px;
+  color: var(--ink-sub);
+  font-variant-numeric: tabular-nums;
+}
+
+/* 15. 用語解説 */
+.glossaryCard {
+  background: var(--card);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-card);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.glossaryTerm {
+  font-size: 13px;
+  color: var(--ink);
+}
+
+.glossaryDesc {
+  font-size: 12px;
+  color: var(--ink-sub);
+  text-wrap: pretty;
+}
+
+/* 16. フッター */
+.footer {
+  border-top: 1px solid var(--hairline);
+  padding-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--ink-muted);
+}

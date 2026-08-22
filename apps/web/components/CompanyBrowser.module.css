@@ -1,0 +1,348 @@
+.main {
+  max-width: var(--content-width);
+  margin: 0 auto;
+  padding: 28px 20px 72px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.head {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.h1 {
+  font-size: 24px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.lead {
+  font-size: 13px;
+  color: var(--ink-sub);
+  text-wrap: pretty;
+}
+
+/* ---- フィルタチップ ---- */
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  position: relative;
+}
+
+.chipWrap {
+  position: relative;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 14px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--hairline);
+  background: var(--panel);
+  color: var(--ink-sub);
+  font-size: 13px;
+  font-weight: 400;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.12s ease, color 0.12s ease;
+}
+
+.chipActive {
+  background: var(--accent);
+  color: var(--on-accent);
+  border-color: var(--accent);
+}
+
+.marker {
+  font-size: 11px;
+  opacity: 0.8;
+}
+
+.popover {
+  position: absolute;
+  top: 40px;
+  left: 0;
+  z-index: 20;
+  min-width: 180px;
+  background: var(--panel);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-card);
+  padding: 6px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.option {
+  text-align: left;
+  padding: 8px 12px;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--ink);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.optionActive {
+  background: var(--brand);
+  color: var(--brand-text);
+}
+
+.clear {
+  height: 34px;
+  padding: 0 14px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--hairline);
+  background: transparent;
+  color: var(--ink-sub);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+/* ---- 件数 + ソート ---- */
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.counts {
+  font-size: 13px;
+  color: var(--ink-sub);
+}
+
+.countNum {
+  color: var(--ink);
+}
+
+.sortLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+
+.select {
+  height: 34px;
+  padding: 0 12px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--hairline);
+  background: var(--panel);
+  color: var(--accent-hover);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+/* ---- テーブル ---- */
+.tableCard {
+  background: var(--panel);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-panel);
+  overflow: hidden;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+@media (max-width: 759px) {
+  .tableCard {
+    display: none;
+  }
+}
+
+.th,
+.thNum {
+  padding: 14px 12px;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--ink-muted);
+  border-bottom: 1px solid var(--hairline);
+}
+
+.th {
+  text-align: left;
+}
+
+.thNum {
+  text-align: right;
+}
+
+.thFirst {
+  padding-left: 20px;
+}
+
+.thLast {
+  padding-right: 20px;
+}
+
+.row {
+  cursor: pointer;
+  transition: background-color 0.12s ease;
+}
+
+.row:hover {
+  background: var(--brand);
+}
+
+.td {
+  padding: 14px 12px;
+  border-bottom: 1px solid var(--hairline);
+  font-size: 13px;
+  color: var(--ink);
+}
+
+.tdNum {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.tdFirst {
+  padding-left: 20px;
+}
+
+.tdLast {
+  padding-right: 20px;
+}
+
+.nameCell {
+  display: flex;
+  flex-direction: column;
+}
+
+.name {
+  font-size: 14px;
+  color: var(--ink);
+}
+
+.meta {
+  font-size: 11px;
+  color: var(--ink-muted);
+}
+
+.cellInline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.rowLink {
+  color: inherit;
+  text-decoration: none;
+}
+
+.rowLink:hover {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* ---- モバイルカード ---- */
+/* display を持つのでグローバルの .narrowOnly ではなくここで切り替える。 */
+.cards {
+  display: none;
+  flex-direction: column;
+  gap: 10px;
+}
+
+@media (max-width: 759px) {
+  .cards {
+    display: flex;
+  }
+}
+
+.card {
+  background: var(--panel);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-card);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.cardTop {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.cardName {
+  font-size: 15px;
+  color: var(--ink);
+}
+
+.cardSalary {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.cardSalaryValue {
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.cardSalaryLabel {
+  font-size: 11px;
+  color: var(--ink-muted);
+}
+
+.cardStats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  font-size: 12px;
+  color: var(--ink-sub);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- さらに表示 / 注記 ---- */
+.moreWrap {
+  display: flex;
+  justify-content: center;
+}
+
+.more {
+  height: 40px;
+  padding: 0 28px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--hairline);
+  background: transparent;
+  color: var(--ink);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.note {
+  font-size: 11px;
+  color: var(--ink-muted);
+  text-wrap: pretty;
+}
+
+.empty {
+  background: var(--panel);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-panel);
+  padding: 28px 20px;
+  font-size: 13px;
+  color: var(--ink-sub);
+  text-align: center;
+}

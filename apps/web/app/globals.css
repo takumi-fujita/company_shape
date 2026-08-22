@@ -1,0 +1,141 @@
+/*
+ * デザイントークン。README「Design Tokens」の確定値。
+ * ここ以外の場所で色を直書きしないこと（CI の禁止語チェックで検出する）。
+ * ライトモードのみ。ダークモードは要件から削除済み。
+ */
+:root {
+  --sub: #f1efe8;
+  --brand: #faece7;
+  --brand-text: #993c1d;
+  --accent: #1d9e75;
+  --accent-hover: #0f6e56;
+  --on-accent: #ffffff;
+  --card: #f5f4f0;
+  --panel: #ffffff;
+  --ink: #2c2c2a;
+  --ink-sub: #5f5e5a;
+  --ink-muted: #888780;
+  --hairline: rgba(0, 0, 0, 0.06);
+  --field: #ffffff;
+
+  /* 閾値超過のときだけ使う。良好を表す色は存在しない。 */
+  --alert-bg: #fcebeb;
+  --alert-text: #a32d2d;
+  --alert-line: rgba(163, 45, 45, 0.18);
+  --warn-bg: #faeeda;
+  --warn-text: #854f0b;
+  --warn-line: rgba(133, 79, 11, 0.18);
+
+  /* グラフとイラストのみ配色制約の外。ただしグレーの棒グラフは禁止。 */
+  --chart-teal-1: #9fe1cb;
+  --chart-teal-2: #5dcaa5;
+  --chart-teal-3: #1d9e75;
+  --chart-line: #7f77dd;
+  --chart-mid: #b7b5ac;
+
+  --kw-bg: #eeedfe;
+  --kw-text: #3c3489;
+  --accent-soft: #e1f5ee;
+
+  /* 形 */
+  --radius-panel: 16px;
+  --radius-card: 14px;
+  --radius-pill: 99px;
+
+  /* 余白 */
+  --content-width: 1120px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--sub);
+  color: var(--ink);
+  /* Web フォント未使用。OS 標準の日本語ゴシックで初期表示を優先する。 */
+  font-family: 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', system-ui, sans-serif;
+  font-size: 14px;
+  /* weight は 400 と 500 の 2 種のみ。600 以上は使わない。 */
+  font-weight: 400;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: var(--accent-hover);
+  text-decoration: none;
+  transition: color 0.12s ease;
+}
+
+a:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+::selection {
+  background: var(--brand);
+}
+
+h1,
+h2,
+h3,
+p,
+figure {
+  margin: 0;
+}
+
+button,
+input,
+select {
+  font-family: inherit;
+}
+
+/* 数値は必ず等幅数字で揃える。 */
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+/*
+ * 760px を境に表示を切り替える。JS ではなく CSS で行う（SSG のため）。
+ *
+ * !important を付けているのは、CSS Modules が globals.css より後に読み込まれるため。
+ * 同じ詳細度だと後勝ちで module 側の display が勝ってしまう。
+ * なお module 側で display を持つ要素にはこのユーティリティを使わず、
+ * module 内で @media を書くこと（.cards / .tableCard がその例）。
+ */
+.wideOnly {
+  display: revert;
+}
+.narrowOnly {
+  display: none !important;
+}
+
+@media (max-width: 759px) {
+  .wideOnly {
+    display: none !important;
+  }
+  .narrowOnly {
+    display: revert !important;
+  }
+}
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
