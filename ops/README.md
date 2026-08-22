@@ -136,25 +136,82 @@ docker compose run --rm etl shell                     # 調査用シェル
 
 日次実行は前日分の差分しか取らない。過去分は単発実行で入れる。
 
+### なぜ 5 年分なのか
+
+上場企業は年 1 回しか有報を出さないので、**13 か月で全社が 1 周する**。
+それ以上遡るのは、1 通の有報から取れる期数に差があるため。
+
+| 項目 | 1 通から取れる期数 |
+|---|---|
+| 売上高・従業員数 | 5 期（主要な経営指標等の推移） |
+| 営業利益 | 2 期（財務諸表本表） |
+| 平均年収・勤続年数・セグメント | 1 期 |
+
+5 年分を遡ると、営業利益と平均年収の系列も 5 期そろう。
+**古い年から順に**入れること（新しい順に入れると古い期が窓から外れる）。
+
+### 手順
+
 ```bash
 # リポジトリのルートで
-# 1. 抽出率の確認（100 社だけ・要約なし）
+# 0. まっさらから始める（ダミーデータや試し取り込みを消す）
+rm -f data/companies.db
+
+# 1. まず 1 か月・100 社で抽出率を確認する
 docker compose run --rm \
   -e ETL_DATE_FROM=2026-06-01 -e ETL_DATE_TO=2026-06-30 \
-  -e ETL_LIMIT=100 -e ETL_SKIP_SUMMARIES=true etl run
+  -e ETL_LIMIT=100 -e ETL_SKIP_SUMMARIES=true -e SKIP_DEPLOY=true \
+  -e MAX_SHRINK_PERCENT=100 etl run
 
-# 2. 全期間の投入
-docker compose run --rm \
-  -e ETL_DATE_FROM=2025-04-01 -e ETL_DATE_TO=2026-08-22 \
-  -e ETL_SKIP_SUMMARIES=true etl run
-
-# 3. 要約の生成（Message Batches API。費用が半分）
-docker compose run --rm \
-  -e ETL_SUMMARIES_ONLY=true -e ETL_SUMMARY_BATCH=true etl run
+python3 ops/verify_db.py data/companies.db
 ```
 
-1 のあと、Actions ではなく**配信されたページを見て**抽出率とレイアウトを確認する。
-XBRL の勘定科目マッピングはここで必ず調整が要ると考えておくこと（`pipeline/config.py`）。
+抽出率（従業員数・平均年収が取れている割合）を見て、
+低ければ `pipeline/config.py` の勘定科目マッピングを直す。ここは実データを当てるまで
+分からないので、必ず確認すること。
+
+```bash
+# 2. 5 年分を年ごとに入れる。古い年から順に。
+#    1 年あたり 2〜3 時間かかる。途中で止めても、再実行すれば取り込み済みは飛ばす。
+for y in 2021 2022 2023 2024 2025; do
+  docker compose run --rm \
+    -e ETL_DATE_FROM=$y-04-01 -e ETL_DATE_TO=$((y+1))-03-31 \
+    -e ETL_SKIP_SUMMARIES=true -e SKIP_DEPLOY=true \
+    -e MAX_SHRINK_PERCENT=100 etl run
+done
+
+# 3. 直近（前年度の 4 月から前日まで）
+docker compose run --rm \
+  -e ETL_DATE_FROM=2026-04-01 \
+  -e ETL_SKIP_SUMMARIES=true -e SKIP_DEPLOY=true etl run
+
+# 4. 要約をまとめて生成（Message Batches API。費用が半分）
+docker compose run --rm \
+  -e ETL_SUMMARIES_ONLY=true -e ETL_SUMMARY_BATCH=true -e SKIP_DEPLOY=true etl run
+
+# 5. 検査して配信
+python3 ops/verify_db.py data/companies.db
+docker compose run --rm etl run
+```
+
+`MAX_SHRINK_PERCENT=100` を付けているのは、空の DB から始めると
+「会社数が急減していない」の検査に引っかかるため。定常運用では外すこと。
+
+`ETL_SKIP_SUMMARIES=true` を付けているのは、取り込みのたびに数千社分の要約を
+逐次生成してしまうのを避けるため。要約は 4 でまとめて作る。
+
+### 取り込み対象
+
+`docTypeCode=120`（有価証券報告書）には**投資信託の有報が大量に混ざる**。
+1 つの運用会社がファンドごとに何通も出すので、同じ EDINET コードが何度も現れ、
+しかも従業員数も平均年収も持たない。次の条件で事業会社だけに絞っている。
+
+- `formCode == "030000"`（内国会社の有価証券報告書）
+- `fundCode` が無い
+- `secCode` がある（＝上場している）
+
+実測では、ある 1 日の 27 件のうち投資信託が 20 件、外国会社が 1 件で、
+対象になる事業会社は 6 件だった。
 
 ### 業種分類
 

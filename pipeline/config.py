@@ -10,6 +10,9 @@ EDINET_BASE = "https://api.edinet-fsa.go.jp/api/v2"
 EDINET_API_KEY = os.environ.get("EDINET_API_KEY")
 #: 有価証券報告書
 DOC_TYPE_ASR = "120"
+#: 様式コード。030000 = 有価証券報告書（内国会社）。
+#: 投資信託や外国会社は別の様式コードなので、ここで事業会社に絞る。
+FORM_CODE_ASR = "030000"
 
 #: API 失敗時は指数バックオフで 3 回リトライ。それでも駄目ならその会社だけスキップして続行。
 MAX_RETRIES = 3

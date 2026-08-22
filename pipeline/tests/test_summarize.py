@@ -79,9 +79,31 @@ class TestRequestShape(unittest.TestCase):
         self.assertEqual(params["fallbacks"], "default")
         self.assertIn(claude.FALLBACK_BETA, params["betas"])
 
-    def test_schema_caps_the_tag_count(self):
-        self.assertEqual(claude.OUTPUT_SCHEMA["properties"]["tags"]["maxItems"], guard.MAX_TAGS)
+    def test_schema_avoids_keywords_the_api_rejects(self):
+        """構造化出力が受け付けないキーワードを混ぜない。
+
+        maxItems を入れて 400 を食らったことがある:
+          output_config.format.schema: For 'array' type, property 'maxItems' is not supported
+        全件が要約なしで通ってしまい、しかもガードは何も言わない（要約が無いだけ）ので、
+        気づきにくい。スキーマ側で個数を縛らず、プロンプトと guard.check に任せる。
+        """
+        UNSUPPORTED = ("maxItems", "minItems", "maxLength", "minLength", "pattern", "format")
+        def walk(node, path="schema"):
+            if isinstance(node, dict):
+                for k, v in node.items():
+                    self.assertNotIn(k, UNSUPPORTED, "%s に %s がある" % (path, k))
+                    walk(v, "%s.%s" % (path, k))
+            elif isinstance(node, list):
+                for i, v in enumerate(node):
+                    walk(v, "%s[%d]" % (path, i))
+        walk(claude.OUTPUT_SCHEMA)
         self.assertFalse(claude.OUTPUT_SCHEMA["additionalProperties"])
+
+    def test_tag_count_is_enforced_by_prompt_and_guard(self):
+        """スキーマで縛れないぶん、プロンプトとガードの両方で押さえる。"""
+        self.assertIn("最大 %d つ" % guard.MAX_TAGS, claude.load_prompt())
+        over = ["あ", "い", "う", "え", "お"]
+        self.assertFalse(guard.check("受託開発が中心。", over).accepted)
 
     def test_prompt_forbids_evaluative_language(self):
         prompt = claude.load_prompt()

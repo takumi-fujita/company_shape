@@ -29,11 +29,13 @@ FALLBACK_BETA = "server-side-fallback-2026-07-01"
 PROMPT_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "prompt.txt")
 
 #: 構造化出力のスキーマ。tags のパース失敗をここで潰しておく。
+#: 個数の上限は API のスキーマでは指定できない（maxItems は非対応）ので、
+#: プロンプトで指示し、最終的には guard.check が弾く。
 OUTPUT_SCHEMA = {
     "type": "object",
     "properties": {
         "summary": {"type": "string"},
-        "tags": {"type": "array", "items": {"type": "string"}, "maxItems": guard.MAX_TAGS},
+        "tags": {"type": "array", "items": {"type": "string"}},
     },
     "required": ["summary", "tags"],
     "additionalProperties": False,

@@ -151,7 +151,21 @@ deploy_site() {
 # 引数 > 環境変数 > 既定値 の順で決める（CI からは環境変数で渡す）。
 YESTERDAY="$(date -v-1d '+%Y-%m-%d' 2>/dev/null || date -d 'yesterday' '+%Y-%m-%d')"
 DATE_FROM="${1:-${ETL_DATE_FROM:-$YESTERDAY}}"
-DATE_TO="${2:-${ETL_DATE_TO:-$DATE_FROM}}"
+
+# 終了日の既定:
+#   引数や ETL_DATE_TO があればそれ。
+#   開始日だけ指定されたら「そこから前日まで」。過去分をまとめて入れたいはずなので、
+#   1 日分に縮めない（初回投入でこれを踏むと 1 日しか入らない）。
+#   何も指定が無ければ前日 1 日分（日次実行）。
+if [ -n "${2:-}" ]; then
+  DATE_TO="$2"
+elif [ -n "${ETL_DATE_TO:-}" ]; then
+  DATE_TO="$ETL_DATE_TO"
+elif [ -n "${1:-}" ]; then
+  DATE_TO="$1"          # 日付を 1 つだけ引数で渡したときはその日だけ
+else
+  DATE_TO="$YESTERDAY"
+fi
 
 ETL_ARGS=(--from "$DATE_FROM" --to "$DATE_TO")
 [ "${ETL_LIMIT:-0}" != "0" ] && [ -n "${ETL_LIMIT:-}" ] && ETL_ARGS+=(--limit "$ETL_LIMIT")

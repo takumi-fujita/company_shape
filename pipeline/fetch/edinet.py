@@ -45,13 +45,26 @@ def list_documents(date):
         # 訂正報告書（取下げ・縦覧終了）は対象外
         if r.get("withdrawalStatus") == "1" or r.get("docInfoEditStatus") == "1":
             continue
+
+        # docTypeCode=120 には投資信託の有価証券報告書も入る。
+        # 1 つの運用会社がファンドごとに何通も出すため、同じ EDINET コードが
+        # 何度も現れ、しかも従業員数も平均年収も持たない。対象は上場事業会社なので落とす。
+        if r.get("fundCode"):
+            continue
+        sec_code = (r.get("secCode") or "").strip()
+        if not sec_code:
+            # 上場していない有報提出会社（非上場の大会社など）も対象外。
+            continue
+        if config.FORM_CODE_ASR and r.get("formCode") not in (None, "", config.FORM_CODE_ASR):
+            continue
+
         submit = (r.get("submitDateTime") or "")[0:10].replace("/", "-")
         out.append(
             {
                 "doc_id": r.get("docID"),
                 "edinet_code": r.get("edinetCode"),
                 "name": r.get("filerName"),
-                "sec_code": (r.get("secCode") or "")[:4] or None,
+                "sec_code": sec_code[:4],
                 "corp_number": r.get("JCN"),
                 "period_end": r.get("periodEnd"),
                 "filed_at": submit or date,
