@@ -33,7 +33,7 @@
 ```bash
 # リポジトリのルートで
 # 認証情報。ops/env.example をコピーして記入したものを読み込む
-source ~/.config/kaisha-no-katachi/env
+source ~/.config/company-shape/env
 
 python3 pipeline/main.py --date 2026-06-26      # 1 日分を取り込む
 python3 pipeline/main.py --from 2026-06-01 --to 2026-06-30 --limit 100

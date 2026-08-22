@@ -52,7 +52,7 @@ RUN npm install -g wrangler@4 --no-audit --no-fund \
 
 # --- 実行 ----------------------------------------------------------------------
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
-COPY docker/crontab /etc/kaisha/crontab
+COPY docker/crontab /etc/company-shape/crontab
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
 ENV NODE_ENV=production \

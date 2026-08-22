@@ -46,6 +46,9 @@ jobs:
       # SSG スモークテスト: 全ページのビルドが 1 社も落ちずに完走すること（§10）
       - name: SSG ビルド
         run: npm run build
+        env:
+          # 既定値を持たないので CI でも明示する。配信しないので仮の値でよい。
+          NEXT_PUBLIC_SITE_URL: https://example.invalid
 
       # パフォーマンス予算: 1 ページあたり JS 150KB gzip / 検索インデックス 2MB gzip
       - name: パフォーマンス予算
@@ -78,8 +81,11 @@ jobs:
           cache-dependency-path: apps/web/package-lock.json
       - run: npm ci
         working-directory: apps/web
-      - run: COMPANIES_DB=/tmp/synthetic.db npm run build
+      - run: npm run build
         working-directory: apps/web
+        env:
+          COMPANIES_DB: /tmp/synthetic.db
+          NEXT_PUBLIC_SITE_URL: https://example.invalid
 
       # 配信前の関門が ETL の出力に対しても通ること
       - name: DB 健全性チェック

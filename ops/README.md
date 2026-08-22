@@ -19,7 +19,7 @@ Python も Node も wrangler もイメージが持つ。実行場所は問わな
 | `ops/daily-update.sh` | 本体。取り込み → 検査 → push → ビルド → 配信 |
 | `ops/verify_db.py` | 配信前の DB 健全性チェック。落ちたらコミットも配信もしない |
 | `ops/env.example` | 認証情報と設定の雛形 |
-| `ops/com.kaisha-no-katachi.daily.plist` | Docker を使わず macOS で直接回す場合のみ |
+| `ops/com.company-shape.daily.plist` | Docker を使わず macOS で直接回す場合のみ |
 
 GitHub Actions は **フロントの変更を配信する `deploy.yml`** と **CI** だけ。
 データ更新による配信はコンテナが直接行うので、Actions は取り込みに関与しない。
@@ -33,8 +33,8 @@ GitHub Actions は **フロントの変更を配信する `deploy.yml`** と **C
 `cp ops/env.example .env` のような相対パスも同じ。
 
 ```bash
-git clone <このリポジトリの URL> kaisha-no-katachi
-cd kaisha-no-katachi
+git clone <このリポジトリの URL>
+cd <クローンしてできたディレクトリ>
 pwd    # 以降のコマンドはすべてここで実行する
 ```
 
@@ -49,7 +49,7 @@ pwd    # 以降のコマンドはすべてここで実行する
 ```bash
 npm i -g wrangler
 wrangler login
-wrangler pages project create kaisha-no-katachi --production-branch main
+wrangler pages project create company-shape --production-branch main
 ```
 
 **ビルドは Cloudflare 側では行わない。** コンテナ（データ更新時）と GitHub Actions
@@ -67,7 +67,7 @@ Settings → Secrets and variables → Actions:
 |---|---|---|
 | Secret | `CLOUDFLARE_API_TOKEN` | Pages の編集権限を持つ API トークン |
 | Secret | `CLOUDFLARE_ACCOUNT_ID` | Cloudflare のアカウント ID |
-| Variable | `SITE_URL` | `https://kaisha-no-katachi.jp`（canonical と sitemap に入る） |
+| Variable | `SITE_URL` | 実際に配信するドメイン。canonical と sitemap に入る。**既定値は無いので未設定だとビルドが止まる** |
 
 API トークンは Cloudflare の「My Profile → API Tokens」で
 **Account → Cloudflare Pages → Edit** のテンプレートから作る。
@@ -87,6 +87,7 @@ Pages プロジェクトの Custom domains にドメインを追加する。
 cp ops/env.example .env
 # .env をエディタで開いて記入する
 #   必須: EDINET_API_KEY / CLOUDFLARE_API_TOKEN / CLOUDFLARE_ACCOUNT_ID
+#         NEXT_PUBLIC_SITE_URL（既定値が無いので未設定だとビルドが止まる）
 
 docker compose build
 docker compose run --rm etl run     # まず 1 回だけ流して確認
@@ -156,10 +157,10 @@ sec_code,industry_code,industry_label,market
 
 ```bash
 # リポジトリのルートで
-mkdir -p ~/.config/kaisha-no-katachi
-cp ops/env.example ~/.config/kaisha-no-katachi/env
-chmod 600 ~/.config/kaisha-no-katachi/env
-# ~/.config/kaisha-no-katachi/env をエディタで開いて記入する
+mkdir -p ~/.config/company-shape
+cp ops/env.example ~/.config/company-shape/env
+chmod 600 ~/.config/company-shape/env
+# ~/.config/company-shape/env をエディタで開いて記入する
 
 bash ops/daily-update.sh
 ```
@@ -169,7 +170,7 @@ bash ops/daily-update.sh
 
 同じスクリプトなので動きは変わらない。ただし Python 3.12 / Node 22 / wrangler を
 ホスト側で揃える必要がある。macOS で常用したい場合は
-`ops/com.kaisha-no-katachi.daily.plist` を LaunchAgents に置く（`docker compose up -d` の代わり）。
+`ops/com.company-shape.daily.plist` を LaunchAgents に置く（`docker compose up -d` の代わり）。
 
 ---
 
@@ -177,7 +178,7 @@ bash ops/daily-update.sh
 
 `ops/daily-update.sh` は次の順で動く。コンテナでも手元でも同じ。
 
-1. `~/.config/kaisha-no-katachi/env` があれば読む（コンテナでは compose の env_file から入る）
+1. `~/.config/company-shape/env` があれば読む（コンテナでは compose の env_file から入る）
 2. **二重起動を防ぐ**（前回が実行中ならスキップ。待つと EDINET を二重に叩く）
 3. 作業ツリーが綺麗か / ブランチが `main` かを確認する
 4. `git pull --rebase`
@@ -236,7 +237,7 @@ cat pipeline/logs/failures.log          # 取り込みに失敗した会社
 ```bash
 # リポジトリのルートで
 # 配信だけ戻す（Cloudflare の以前のデプロイに切り替える）
-wrangler pages deployment list --project-name=kaisha-no-katachi
+wrangler pages deployment list --project-name=company-shape
 
 # データを戻す
 git revert <commit>

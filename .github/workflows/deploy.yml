@@ -49,6 +49,8 @@ jobs:
         run: npm run build
         working-directory: apps/web
         env:
+          # 未設定だとビルドが例外で止まる（既定値を持たない）。
+          # リポジトリの Variables に SITE_URL を登録しておくこと。
           NEXT_PUBLIC_SITE_URL: ${{ vars.SITE_URL }}
 
       - name: パフォーマンス予算
@@ -60,5 +62,5 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy out --project-name=kaisha-no-katachi --branch=main
+          command: pages deploy out --project-name=company-shape --branch=main
           workingDirectory: apps/web

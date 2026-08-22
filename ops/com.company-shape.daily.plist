@@ -9,18 +9,18 @@
   - macOS の TCC（フルディスクアクセス）の権限が LaunchAgent 単位で扱える。
 
   設置:
-    cp ops/com.kaisha-no-katachi.daily.plist ~/Library/LaunchAgents/
+    cp ops/com.company-shape.daily.plist ~/Library/LaunchAgents/
     # 下の PATH と WorkingDirectory を実際のパスに書き換えてから
-    launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.kaisha-no-katachi.daily.plist
-    launchctl kickstart -p gui/$(id -u)/com.kaisha-no-katachi.daily   # 手動で 1 回流す
+    launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.company-shape.daily.plist
+    launchctl kickstart -p gui/$(id -u)/com.company-shape.daily   # 手動で 1 回流す
 
   停止:
-    launchctl bootout gui/$(id -u)/com.kaisha-no-katachi.daily
+    launchctl bootout gui/$(id -u)/com.company-shape.daily
 -->
 <plist version="1.0">
 <dict>
   <key>Label</key>
-  <string>com.kaisha-no-katachi.daily</string>
+  <string>com.company-shape.daily</string>
 
   <key>ProgramArguments</key>
   <array>
@@ -48,7 +48,7 @@
   <dict>
     <key>PATH</key>
     <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
-    <!-- API キーはここに書かない。~/.config/kaisha-no-katachi/env を daily-update.sh が読む -->
+    <!-- API キーはここに書かない。~/.config/company-shape/env を daily-update.sh が読む -->
   </dict>
 
   <key>StandardOutPath</key>

@@ -11,7 +11,7 @@ services:
     build:
       context: .
       dockerfile: docker/Dockerfile
-    image: kaisha-no-katachi/etl
+    image: company-shape/etl
     restart: unless-stopped
     env_file:
       # 無ければ環境変数だけで動く（CI などで .env を置きたくない場合）

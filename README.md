@@ -22,11 +22,11 @@ fixtures/companies.json  ダミー 14 社（DB が無い環境でのフォール
 **以下のコマンドはすべてリポジトリのルートで実行する。** まず取得する。
 
 ```bash
-git clone <このリポジトリの URL> kaisha-no-katachi
-cd kaisha-no-katachi
+git clone <このリポジトリの URL>
+cd <クローンしてできたディレクトリ>
 ```
 
-以降の `pwd` はここ（`kaisha-no-katachi/`）を指す。別のディレクトリに移る箇所には
+以降のコマンドはすべてここで実行する。別のディレクトリに移る箇所には
 その都度 `cd` を書いてある。
 
 ### フロントだけ触る（実データ不要）
@@ -39,8 +39,9 @@ python3 pipeline/seed_fixtures.py   # ダミーデータを生成
 
 cd apps/web
 npm install
-npm run dev      # http://localhost:3000/companies/
-npm run check    # 禁止語チェック + テスト + SSG ビルド + パフォーマンス予算
+npm run dev      # http://localhost:3000/companies/（SITE_URL 未設定でも動く）
+# SSG ビルドは canonical/sitemap の絶対 URL が要る（既定値は無い）
+NEXT_PUBLIC_SITE_URL=https://example.invalid npm run check
 cd -             # ルートに戻る
 ```
 
@@ -64,10 +65,10 @@ Docker を使わず直接回すこともできる（Python 3.12 / Node 22 / wran
 
 ```bash
 # リポジトリのルートで
-mkdir -p ~/.config/kaisha-no-katachi
-cp ops/env.example ~/.config/kaisha-no-katachi/env
-chmod 600 ~/.config/kaisha-no-katachi/env
-# ~/.config/kaisha-no-katachi/env をエディタで開いて記入する
+mkdir -p ~/.config/company-shape
+cp ops/env.example ~/.config/company-shape/env
+chmod 600 ~/.config/company-shape/env
+# ~/.config/company-shape/env をエディタで開いて記入する
 
 bash ops/daily-update.sh                    # 取り込み → push → ビルド → 配信
 SKIP_DEPLOY=true bash ops/daily-update.sh   # 配信せずデータ更新だけ
@@ -106,6 +107,8 @@ SKIP_DEPLOY=true bash ops/daily-update.sh   # 配信せずデータ更新だけ
 - フォントウェイトは 400 と 500 のみ。Web フォントは使わない。
 - 実行時に外部 API を呼ばない。すべてビルド時に解決する。
 - 閾値は `apps/web/lib/thresholds.ts` の 1 箇所のみで定義する。
+- `NEXT_PUBLIC_SITE_URL` に既定値を置かない。未設定なら本番ビルドを例外で止める。
+  存在しないドメインが canonical や sitemap に混入したまま公開されるほうが高くつく。
 
 ## デプロイと日次更新
 

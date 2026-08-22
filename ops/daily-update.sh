@@ -43,7 +43,7 @@ cd "$REPO_ROOT"
 
 LOG_DIR="$REPO_ROOT/pipeline/logs"
 LOG_FILE="$LOG_DIR/daily.log"
-LOCK_DIR="${TMPDIR:-/tmp}/kaisha-no-katachi-daily.lock"
+LOCK_DIR="${TMPDIR:-/tmp}/company-shape-daily.lock"
 BRANCH="${DEPLOY_BRANCH:-main}"
 #: 前回より会社数がこれ以上減っていたら異常として止める（%）。
 MAX_SHRINK_PERCENT="${MAX_SHRINK_PERCENT:-5}"
@@ -53,8 +53,8 @@ mkdir -p "$LOG_DIR"
 
 # --- API キー --------------------------------------------------------------
 # キーはリポジトリにも launchd の plist にも書かない。ここだけに置く。
-#   chmod 600 ~/.config/kaisha-no-katachi/env
-ENV_FILE="${KAISHA_ENV_FILE:-$HOME/.config/kaisha-no-katachi/env}"
+#   chmod 600 ~/.config/company-shape/env
+ENV_FILE="${COMPANY_SHAPE_ENV_FILE:-$HOME/.config/company-shape/env}"
 if [ -f "$ENV_FILE" ]; then
   set -a
   # shellcheck disable=SC1090
@@ -114,6 +114,11 @@ deploy_site() {
     log "（データは push 済みなので、あとから配信だけやり直せます）"
     return 0
   fi
+  # canonical / sitemap に入る値。既定値が無いので、ここで無ければビルドが落ちる。
+  # 落ちてから気づくより先に止める。
+  if [ -z "${NEXT_PUBLIC_SITE_URL:-}" ]; then
+    fail "NEXT_PUBLIC_SITE_URL が未設定です。canonical と sitemap に入るので必須です。"
+  fi
 
   cd "$REPO_ROOT/apps/web"
 
@@ -132,7 +137,7 @@ deploy_site() {
 
   log "Cloudflare Pages へ配信します"
   if ! wrangler pages deploy out \
-        --project-name "${CF_PAGES_PROJECT:-kaisha-no-katachi}" \
+        --project-name "${CF_PAGES_PROJECT:-company-shape}" \
         --branch "$BRANCH" 2>&1 | tee -a "$LOG_FILE"; then
     cd "$REPO_ROOT"; fail "配信に失敗しました。データは push 済みなので配信だけやり直せます。"
   fi
@@ -188,7 +193,7 @@ fi
 # --- 健全性チェック --------------------------------------------------------
 # 壊れた DB を配信しないための最低限の関門。
 # 前リビジョンの会社数と比べ、5% を超えて減っていたら止める（作り直し事故の検出）。
-PREV_DB="$(mktemp "${TMPDIR:-/tmp}/kaisha-prev-db.XXXXXX")"
+PREV_DB="$(mktemp "${TMPDIR:-/tmp}/company-shape-prev-db.XXXXXX")"
 MIN_COMPANIES=0
 if git show "HEAD:data/companies.db" > "$PREV_DB" 2>/dev/null; then
   PREV_COUNT="$(count_companies "$PREV_DB")"

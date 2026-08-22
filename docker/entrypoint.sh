@@ -40,8 +40,8 @@ MSG
 setup_git() {
   cd "$APP_DIR"
   git config --global --add safe.directory "$APP_DIR"
-  git config user.name  "${GIT_AUTHOR_NAME:-kaisha-no-katachi-bot}"
-  git config user.email "${GIT_AUTHOR_EMAIL:-bot@kaisha-no-katachi.invalid}"
+  git config user.name  "${GIT_AUTHOR_NAME:-company-shape-bot}"
+  git config user.email "${GIT_AUTHOR_EMAIL:-bot@company-shape.invalid}"
 
   # HTTPS + トークンで push する場合。SSH 鍵を /root/.ssh にマウントする運用でもよい。
   if [ -n "${GIT_TOKEN:-}" ]; then
@@ -76,8 +76,8 @@ case "${1:-schedule}" in
     prepare_repo
     setup_git
     link_web_deps
-    log "supercronic を起動します（$(grep -v '^#' /etc/kaisha/crontab | grep -v '^$' | head -1)）"
-    exec supercronic -passthrough-logs /etc/kaisha/crontab
+    log "supercronic を起動します（$(grep -v '^#' /etc/company-shape/crontab | grep -v '^$' | head -1)）"
+    exec supercronic -passthrough-logs /etc/company-shape/crontab
     ;;
   shell)
     prepare_repo
