@@ -66,7 +66,8 @@ Pages プロジェクトの Custom domains にドメインを追加する。
 
 ```bash
 cp ops/env.example .env
-$EDITOR .env            # 必須: EDINET_API_KEY / CLOUDFLARE_API_TOKEN / CLOUDFLARE_ACCOUNT_ID
+# .env をエディタで開いて記入する
+#   必須: EDINET_API_KEY / CLOUDFLARE_API_TOKEN / CLOUDFLARE_ACCOUNT_ID
 
 docker compose build
 docker compose run --rm etl run     # まず 1 回だけ流して確認
@@ -136,6 +137,7 @@ sec_code,industry_code,industry_label,market
 mkdir -p ~/.config/kaisha-no-katachi
 cp ops/env.example ~/.config/kaisha-no-katachi/env
 chmod 600 ~/.config/kaisha-no-katachi/env
+# ~/.config/kaisha-no-katachi/env をエディタで開いて記入する
 bash ops/daily-update.sh
 ```
 

@@ -38,7 +38,8 @@ npm run check    # 禁止語チェック + テスト + SSG ビルド + パフォ
 イメージが持つ。実行場所は問わない。
 
 ```bash
-cp ops/env.example .env && $EDITOR .env   # 必須は EDINET_API_KEY
+cp ops/env.example .env
+# .env をエディタで開いて記入する（必須は EDINET_API_KEY）
 
 docker compose build
 docker compose run --rm etl run           # 1 回だけ
@@ -52,6 +53,7 @@ Docker を使わず直接回すこともできる（Python 3.12 / Node 22 / wran
 mkdir -p ~/.config/kaisha-no-katachi
 cp ops/env.example ~/.config/kaisha-no-katachi/env
 chmod 600 ~/.config/kaisha-no-katachi/env
+# ~/.config/kaisha-no-katachi/env をエディタで開いて記入する
 bash ops/daily-update.sh                    # 取り込み → push → ビルド → 配信
 SKIP_DEPLOY=true bash ops/daily-update.sh   # 配信せずデータ更新だけ
 ```
