@@ -26,7 +26,25 @@ GitHub Actions は **フロントの変更を配信する `deploy.yml`** と **C
 
 ---
 
+## 0. 実行場所
+
+**このドキュメントのコマンドはすべてリポジトリのルートで実行する。**
+`docker compose` は `docker-compose.yml` のある場所でないと動かず、
+`cp ops/env.example .env` のような相対パスも同じ。
+
+```bash
+git clone <このリポジトリの URL> kaisha-no-katachi
+cd kaisha-no-katachi
+pwd    # 以降のコマンドはすべてここで実行する
+```
+
+別のディレクトリに移る箇所には、その都度 `cd` を書いてある。
+
+---
+
 ## 1. Cloudflare Pages の準備（初回のみ）
+
+リポジトリのルートで。
 
 ```bash
 npm i -g wrangler
@@ -65,6 +83,7 @@ Pages プロジェクトの Custom domains にドメインを追加する。
 ## 2. コンテナを立てる
 
 ```bash
+# リポジトリのルートで（docker-compose.yml がある場所）
 cp ops/env.example .env
 # .env をエディタで開いて記入する
 #   必須: EDINET_API_KEY / CLOUDFLARE_API_TOKEN / CLOUDFLARE_ACCOUNT_ID
@@ -83,6 +102,7 @@ docker compose logs -f etl
 ### 単発実行
 
 ```bash
+# リポジトリのルートで
 docker compose run --rm etl run                       # 前日分
 docker compose run --rm -e ETL_DATE_FROM=2026-06-26 etl run
 docker compose run --rm -e SKIP_DEPLOY=true etl run   # 配信せずデータ更新だけ
@@ -100,6 +120,7 @@ docker compose run --rm etl shell                     # 調査用シェル
 日次実行は前日分の差分しか取らない。過去分は単発実行で入れる。
 
 ```bash
+# リポジトリのルートで
 # 1. 抽出率の確認（100 社だけ・要約なし）
 docker compose run --rm \
   -e ETL_DATE_FROM=2026-06-01 -e ETL_DATE_TO=2026-06-30 \
@@ -120,7 +141,7 @@ XBRL の勘定科目マッピングはここで必ず調整が要ると考えて
 
 ### 業種分類
 
-`pipeline/data/industries.csv` を先に置く。
+リポジトリのルートから見て `pipeline/data/industries.csv` に置く。
 **これが無いと全社が「分類なし」になり、レーダーの母集団が壊れる。**
 出どころは JPX「東証上場銘柄一覧」。
 
@@ -134,12 +155,17 @@ sec_code,industry_code,industry_label,market
 ## 4. Docker を使わずに回す場合（任意）
 
 ```bash
+# リポジトリのルートで
 mkdir -p ~/.config/kaisha-no-katachi
 cp ops/env.example ~/.config/kaisha-no-katachi/env
 chmod 600 ~/.config/kaisha-no-katachi/env
 # ~/.config/kaisha-no-katachi/env をエディタで開いて記入する
+
 bash ops/daily-update.sh
 ```
+
+`ops/daily-update.sh` は自身の位置からリポジトリのルートを求めて `cd` するので、
+どのディレクトリから呼んでも同じように動く。
 
 同じスクリプトなので動きは変わらない。ただし Python 3.12 / Node 22 / wrangler を
 ホスト側で揃える必要がある。macOS で常用したい場合は
@@ -182,6 +208,7 @@ bash ops/daily-update.sh
 ## 6. 監視
 
 ```bash
+# リポジトリのルートで
 docker compose logs -f etl              # コンテナの標準出力
 
 tail -50 pipeline/logs/daily.log        # ジョブ全体
@@ -207,6 +234,7 @@ cat pipeline/logs/failures.log          # 取り込みに失敗した会社
 ## 7. ロールバック
 
 ```bash
+# リポジトリのルートで
 # 配信だけ戻す（Cloudflare の以前のデプロイに切り替える）
 wrangler pages deployment list --project-name=kaisha-no-katachi
 

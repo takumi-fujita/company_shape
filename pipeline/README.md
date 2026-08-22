@@ -27,14 +27,19 @@
 | `seed_fixtures.py` | ダミー 14 社（フロント単体開発用） |
 | `dev_synthetic.py` | 合成 XBRL を実 ETL 経路に流して検証用 DB を作る |
 
+**以下はリポジトリのルートで実行する。** 常用は Docker（`ops/README.md`）で、
+ここに書くのは ETL 単体を直接叩きたいときの入口。
+
 ```bash
-export EDINET_API_KEY=...                       # EDINET API v2（購読キー必須）
-export GBIZINFO_API_TOKEN=...                   # gBizINFO（トークン必須）
-export ANTHROPIC_API_KEY=...                    # AI 要約
+# リポジトリのルートで
+# 認証情報。ops/env.example をコピーして記入したものを読み込む
+source ~/.config/kaisha-no-katachi/env
+
 python3 pipeline/main.py --date 2026-06-26      # 1 日分を取り込む
 python3 pipeline/main.py --from 2026-06-01 --to 2026-06-30 --limit 100
 python3 pipeline/main.py --subsidies-only       # 補助金だけ全社分を取り直す
 python3 pipeline/main.py --summaries-only --summary-batch  # 未生成の会社の要約をまとめて生成
+
 python3 -m unittest discover -s pipeline/tests  # ネットワーク不要
 ```
 

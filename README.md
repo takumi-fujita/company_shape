@@ -19,17 +19,29 @@ fixtures/companies.json  ダミー 14 社（DB が無い環境でのフォール
 
 ## 動かす
 
+**以下のコマンドはすべてリポジトリのルートで実行する。** まず取得する。
+
+```bash
+git clone <このリポジトリの URL> kaisha-no-katachi
+cd kaisha-no-katachi
+```
+
+以降の `pwd` はここ（`kaisha-no-katachi/`）を指す。別のディレクトリに移る箇所には
+その都度 `cd` を書いてある。
+
 ### フロントだけ触る（実データ不要）
 
 ダミー 14 社で全画面が動く。API キーもコンテナも要らない。
 
 ```bash
+# リポジトリのルートで
 python3 pipeline/seed_fixtures.py   # ダミーデータを生成
 
 cd apps/web
 npm install
 npm run dev      # http://localhost:3000/companies/
 npm run check    # 禁止語チェック + テスト + SSG ビルド + パフォーマンス予算
+cd -             # ルートに戻る
 ```
 
 ### 実データを取り込む
@@ -38,6 +50,7 @@ npm run check    # 禁止語チェック + テスト + SSG ビルド + パフォ
 イメージが持つ。実行場所は問わない。
 
 ```bash
+# リポジトリのルートで（docker-compose.yml がある場所）
 cp ops/env.example .env
 # .env をエディタで開いて記入する（必須は EDINET_API_KEY）
 
@@ -50,13 +63,18 @@ docker compose logs -f etl
 Docker を使わず直接回すこともできる（Python 3.12 / Node 22 / wrangler をホストで揃える）。
 
 ```bash
+# リポジトリのルートで
 mkdir -p ~/.config/kaisha-no-katachi
 cp ops/env.example ~/.config/kaisha-no-katachi/env
 chmod 600 ~/.config/kaisha-no-katachi/env
 # ~/.config/kaisha-no-katachi/env をエディタで開いて記入する
+
 bash ops/daily-update.sh                    # 取り込み → push → ビルド → 配信
 SKIP_DEPLOY=true bash ops/daily-update.sh   # 配信せずデータ更新だけ
 ```
+
+`ops/daily-update.sh` は自身の位置からリポジトリのルートを求めて `cd` するので、
+どこから呼んでも同じように動く。
 
 詳しい手順・初回の一括投入・監視・ロールバックは **`ops/README.md`**。
 
