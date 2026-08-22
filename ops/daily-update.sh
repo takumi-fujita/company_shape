@@ -1,9 +1,17 @@
 #!/usr/bin/env bash
 #
-# 日次更新ジョブ。常時稼働の Mac mini から 5:00 JST に起動する。
+# 取り込みから配信までの一連。
 #
 #   EDINET / gBizINFO / Anthropic → SQLite → git commit && push
-#   → GitHub Actions が検知して Cloudflare Pages にデプロイ
+#   → フロントのビルド（禁止語・テスト・SSG・予算）→ Cloudflare Pages
+#
+# 実行場所は問わない。Docker コンテナ（docker/）の中で回すのが既定だが、
+# 手元で直接実行しても同じ動きをする。
+#
+#   bash ops/daily-update.sh                 # 前日分
+#   bash ops/daily-update.sh 2026-06-26      # 日付を指定
+#   ETL_DATE_FROM=2025-04-01 ETL_DATE_TO=2026-08-22 bash ops/daily-update.sh
+#   SKIP_DEPLOY=true bash ops/daily-update.sh # 配信せずデータ更新だけ
 #
 # 方針:
 # - 差分実行。前日に提出のあった会社だけを処理する。全社の再取得はしない。
@@ -13,10 +21,22 @@
 
 set -Eeuo pipefail
 
-# cron / launchd は LANG 未設定で起動することがある。
+# cron / launchd / CI ランナーは LANG 未設定で起動することがある。
 # その状態だと bash が全角文字を変数名の一部として読んでしまう。
-export LANG="${LANG:-ja_JP.UTF-8}"
-export LC_ALL="${LC_ALL:-ja_JP.UTF-8}"
+# 存在しないロケールを指定すると C にフォールバックして同じ問題が起きるので、
+# 実際に使えるものを選ぶ（Linux は C.UTF-8、macOS は ja_JP.UTF-8）。
+case "${LANG:-}" in
+  *.UTF-8|*.utf8) ;;                      # 既に UTF-8 ならそのまま使う
+  *)
+    for candidate in C.UTF-8 ja_JP.UTF-8 en_US.UTF-8; do
+      if locale -a 2>/dev/null | grep -qxF "$candidate"; then
+        export LANG="$candidate"
+        break
+      fi
+    done
+    ;;
+esac
+export LC_ALL="${LANG:-C.UTF-8}"
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO_ROOT"
@@ -43,6 +63,23 @@ if [ -f "$ENV_FILE" ]; then
 fi
 
 log() { printf '%s %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$*" | tee -a "$LOG_FILE"; }
+
+# GitHub Actions に「データが変わったか」を返す。後続の deploy ジョブがこれを見る。
+emit_changed() {
+  [ -n "${GITHUB_OUTPUT:-}" ] && printf 'changed=%s\n' "$1" >> "$GITHUB_OUTPUT"
+  return 0
+}
+
+# sqlite3 コマンドに依存しない（CI ランナーに無いことがある）。
+count_companies() {
+  "$PYTHON" - "$1" <<'PYEOF' 2>/dev/null || echo 0
+import sqlite3, sys
+try:
+    print(sqlite3.connect(sys.argv[1]).execute("SELECT COUNT(*) FROM companies").fetchone()[0])
+except Exception:
+    print(0)
+PYEOF
+}
 fail() { log "ERROR: $*"; exit 1; }
 
 trap 'log "ERROR: line $LINENO で失敗しました"' ERR
@@ -64,11 +101,61 @@ fi
 echo "$$" > "$LOCK_DIR/pid"
 trap 'rm -rf "$LOCK_DIR"' EXIT
 
-# --- 対象日 ----------------------------------------------------------------
-# 既定は前日。EDINET は当日分が揃うまで時間がかかるため。
-TARGET_DATE="${1:-$(date -v-1d '+%Y-%m-%d' 2>/dev/null || date -d 'yesterday' '+%Y-%m-%d')}"
+# --- フロントのビルドと配信 -------------------------------------------------
+# 検査を通ったものだけを配信する。ここを飛ばすと、禁止語チェックを通らない
+# 内容がそのまま公開される経路ができてしまう。
+deploy_site() {
+  if [ "${SKIP_DEPLOY:-false}" = "true" ]; then
+    log "SKIP_DEPLOY=true のため配信しません"
+    return 0
+  fi
+  if [ -z "${CLOUDFLARE_API_TOKEN:-}" ] || [ -z "${CLOUDFLARE_ACCOUNT_ID:-}" ]; then
+    log "CLOUDFLARE_API_TOKEN / CLOUDFLARE_ACCOUNT_ID が無いため配信をスキップします"
+    log "（データは push 済みなので、あとから配信だけやり直せます）"
+    return 0
+  fi
 
-log "===== 日次更新 開始（対象日 ${TARGET_DATE}）====="
+  cd "$REPO_ROOT/apps/web"
+
+  if [ ! -d node_modules ]; then
+    log "npm ci"
+    if ! npm ci --no-audit --no-fund 2>&1 | tee -a "$LOG_FILE"; then
+      cd "$REPO_ROOT"; fail "npm ci に失敗しました"
+    fi
+  fi
+
+  # 禁止語チェック → テスト → SSG ビルド → パフォーマンス予算
+  log "検査とビルド（npm run check）"
+  if ! npm run check 2>&1 | tee -a "$LOG_FILE"; then
+    cd "$REPO_ROOT"; fail "検査またはビルドに失敗しました。配信しません。"
+  fi
+
+  log "Cloudflare Pages へ配信します"
+  if ! wrangler pages deploy out \
+        --project-name "${CF_PAGES_PROJECT:-kaisha-no-katachi}" \
+        --branch "$BRANCH" 2>&1 | tee -a "$LOG_FILE"; then
+    cd "$REPO_ROOT"; fail "配信に失敗しました。データは push 済みなので配信だけやり直せます。"
+  fi
+
+  cd "$REPO_ROOT"
+  log "配信しました"
+}
+
+# --- 対象期間とオプション --------------------------------------------------
+# 既定は前日 1 日分。EDINET は当日分が揃うまで時間がかかるため。
+# 引数 > 環境変数 > 既定値 の順で決める（CI からは環境変数で渡す）。
+YESTERDAY="$(date -v-1d '+%Y-%m-%d' 2>/dev/null || date -d 'yesterday' '+%Y-%m-%d')"
+DATE_FROM="${1:-${ETL_DATE_FROM:-$YESTERDAY}}"
+DATE_TO="${2:-${ETL_DATE_TO:-$DATE_FROM}}"
+
+ETL_ARGS=(--from "$DATE_FROM" --to "$DATE_TO")
+[ "${ETL_LIMIT:-0}" != "0" ] && [ -n "${ETL_LIMIT:-}" ] && ETL_ARGS+=(--limit "$ETL_LIMIT")
+[ "${ETL_SKIP_SUMMARIES:-false}" = "true" ] && ETL_ARGS+=(--skip-summaries)
+[ "${ETL_SKIP_SUBSIDIES:-false}" = "true" ] && ETL_ARGS+=(--skip-subsidies)
+[ "${ETL_SUMMARIES_ONLY:-false}" = "true" ] && ETL_ARGS+=(--summaries-only)
+[ "${ETL_SUMMARY_BATCH:-false}" = "true" ] && ETL_ARGS+=(--summary-batch)
+
+log "===== 更新 開始（対象 ${DATE_FROM} .. ${DATE_TO}）====="
 
 # --- 事前チェック ----------------------------------------------------------
 [ -n "${EDINET_API_KEY:-}" ] || fail "EDINET_API_KEY が未設定です"
@@ -85,24 +172,26 @@ git pull --rebase --quiet origin "$BRANCH"
 log "ETL を実行します"
 # set -e はパイプの失敗でその場で抜けてしまい、こちらのメッセージが出ない。
 # if で包んで、何に失敗したのかを必ずログに残す。
-if ! "$PYTHON" pipeline/main.py --date "$TARGET_DATE" 2>&1 | tee -a "$LOG_FILE"; then
+log "pipeline/main.py ${ETL_ARGS[*]}"
+if ! "$PYTHON" pipeline/main.py "${ETL_ARGS[@]}" 2>&1 | tee -a "$LOG_FILE"; then
   fail "ETL が失敗しました。コミットしません。"
 fi
 
 # --- 変更の確認 ------------------------------------------------------------
 if git diff --quiet -- data/companies.db; then
   log "データに変更はありませんでした。コミットしません。"
-  log "===== 日次更新 終了 ====="
+  emit_changed false
+  log "===== 更新 終了 ====="
   exit 0
 fi
 
 # --- 健全性チェック --------------------------------------------------------
 # 壊れた DB を配信しないための最低限の関門。
 # 前リビジョンの会社数と比べ、5% を超えて減っていたら止める（作り直し事故の検出）。
-PREV_DB="$(mktemp -t kaisha-prev-db)"
+PREV_DB="$(mktemp "${TMPDIR:-/tmp}/kaisha-prev-db.XXXXXX")"
 MIN_COMPANIES=0
 if git show "HEAD:data/companies.db" > "$PREV_DB" 2>/dev/null; then
-  PREV_COUNT="$(sqlite3 "$PREV_DB" 'SELECT COUNT(*) FROM companies;' 2>/dev/null || echo 0)"
+  PREV_COUNT="$(count_companies "$PREV_DB")"
   MIN_COMPANIES=$(( PREV_COUNT * (100 - MAX_SHRINK_PERCENT) / 100 ))
   log "前リビジョンの会社数: ${PREV_COUNT} 社（下限 ${MIN_COMPANIES} 社）"
 fi
@@ -114,14 +203,18 @@ if ! "$PYTHON" ops/verify_db.py data/companies.db --min-companies "$MIN_COMPANIE
 fi
 
 # --- コミットと push -------------------------------------------------------
-COMPANY_COUNT="$(sqlite3 data/companies.db 'SELECT COUNT(*) FROM companies;')"
+COMPANY_COUNT="$(count_companies data/companies.db)"
 git add data/companies.db
-git commit --quiet -m "data: ${TARGET_DATE} の提出分を反映（${COMPANY_COUNT} 社）"
+git commit --quiet -m "data: ${DATE_FROM} .. ${DATE_TO} の提出分を反映（${COMPANY_COUNT} 社）"
 git push --quiet origin "$BRANCH"
-log "push しました（${COMPANY_COUNT} 社）。GitHub Actions がデプロイします。"
+emit_changed true
+log "push しました（${COMPANY_COUNT} 社）。"
+
+# --- フロントのビルドと配信 -------------------------------------------------
+deploy_site
 
 # --- ログの世代管理 --------------------------------------------------------
 find "$LOG_DIR" -name '*.log' -size +20M -exec sh -c 'mv "$1" "$1.$(date +%Y%m%d)" && : > "$1"' _ {} \; 2>/dev/null || true
 find "$LOG_DIR" -name '*.log.*' -mtime +30 -delete 2>/dev/null || true
 
-log "===== 日次更新 終了 ====="
+log "===== 更新 終了 ====="

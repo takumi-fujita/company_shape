@@ -1,5 +1,8 @@
 # ETL の依存。標準ライブラリで足りる部分は増やさない方針。
 # XBRL は xml.etree で読み、HTTP は urllib、SQLite は sqlite3 を使う。
+#
+# 実行環境は Python 3.12（GitHub Actions / Mac mini とも）。
+# メジャーバージョンを固定しておく。上げるときは pipeline/tests を通してから。
 
 # AI 要約の生成にだけ必要。要約を回さないなら未インストールでも他フェーズは動く。
-anthropic>=1.0
+anthropic>=1.0,<2

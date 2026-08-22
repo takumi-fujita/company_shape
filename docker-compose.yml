@@ -1,0 +1,35 @@
+# 会社のかたち — 取り込みから配信までを 1 つのコンテナで回す。
+#
+#   docker compose up -d          常駐して日次実行（20:00 UTC = 翌 05:00 JST）
+#   docker compose run --rm etl run    1 回だけ実行
+#   docker compose run --rm etl shell  調査用シェル
+#
+# 認証情報は .env から読む（ops/env.example をコピーして作る）。
+
+services:
+  etl:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    image: kaisha-no-katachi/etl
+    restart: unless-stopped
+    env_file:
+      # 無ければ環境変数だけで動く（CI などで .env を置きたくない場合）
+      - path: .env
+        required: false
+    environment:
+      # リポジトリをマウントして使う場合はこのままでよい。
+      # マウントせず clone させる場合は .env に GIT_REMOTE を書く。
+      APP_DIR: /app
+      DEPLOY_BRANCH: ${DEPLOY_BRANCH:-main}
+    volumes:
+      # ホストのリポジトリをそのまま使う。data/companies.db がホスト側に残る。
+      - .:/app
+      # clone 運用に切り替えるときは上を消してこちらを使う:
+      # - repo:/app
+      - pip-cache:/root/.cache/pip
+    # ログはコンテナの標準出力に出る（docker compose logs -f etl）
+
+volumes:
+  repo:
+  pip-cache:

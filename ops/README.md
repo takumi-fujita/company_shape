@@ -1,19 +1,28 @@
-# ops — デプロイと日次更新
+# ops — 取り込みと配信
 
 ```
-Mac mini（毎日 5:00 JST）
+Docker コンテナ（常駐 / supercronic が 20:00 UTC = 翌 05:00 JST に起動）
   EDINET / gBizINFO / Anthropic → pipeline/main.py → data/companies.db
                                                     → git commit && push
-GitHub push
-  └→ Actions（禁止語・テスト・SSG・予算）→ Cloudflare Pages
+  → 禁止語チェック・テスト・SSG ビルド・予算 → wrangler → Cloudflare Pages
 ```
+
+**取り込みから配信までを 1 つのコンテナで完結させる。** ホストに要るのは Docker だけで、
+Python も Node も wrangler もイメージが持つ。実行場所は問わない。
 
 | ファイル | 役割 |
 |---|---|
-| `daily-update.sh` | 日次更新ジョブ本体 |
-| `verify_db.py` | 配信前の DB 健全性チェック。落ちたらコミットも push もしない |
-| `com.kaisha-no-katachi.daily.plist` | launchd 設定（cron の代替） |
-| `env.example` | 認証情報の雛形。実体は `~/.config/kaisha-no-katachi/env` |
+| `docker/Dockerfile` | 実行イメージ（Python 3.12 + Node 22 + wrangler + supercronic） |
+| `docker/entrypoint.sh` | `schedule`（常駐）/ `run`（1 回）/ `shell`（調査） |
+| `docker/crontab` | コンテナ内の実行時刻 |
+| `docker-compose.yml` | 常駐運用の入口 |
+| `ops/daily-update.sh` | 本体。取り込み → 検査 → push → ビルド → 配信 |
+| `ops/verify_db.py` | 配信前の DB 健全性チェック。落ちたらコミットも配信もしない |
+| `ops/env.example` | 認証情報と設定の雛形 |
+| `ops/com.kaisha-no-katachi.daily.plist` | Docker を使わず macOS で直接回す場合のみ |
+
+GitHub Actions は **フロントの変更を配信する `deploy.yml`** と **CI** だけ。
+データ更新による配信はコンテナが直接行うので、Actions は取り込みに関与しない。
 
 ---
 
@@ -25,14 +34,16 @@ wrangler login
 wrangler pages project create kaisha-no-katachi --production-branch main
 ```
 
-**ビルドは Cloudflare 側では行わない。** GitHub Actions でビルドして `out/` をアップロードする。
-Cloudflare のビルド環境に Node と SQLite の依存を持ち込まずに済み、
-CI で通ったものだけが配信される。Pages のダッシュボードでは
+**ビルドは Cloudflare 側では行わない。** コンテナ（データ更新時）と GitHub Actions
+（フロント変更時）でビルドして `out/` をアップロードする。どちらの経路でも
+配信前に禁止語チェックとテストを通る。Pages のダッシュボードでは
 「Direct Upload」プロジェクトとして扱われる。
 
 ### GitHub 側の設定
 
 Settings → Secrets and variables → Actions:
+
+フロントの変更を配信する `deploy.yml` 用。取り込み系のキーは**コンテナの `.env`** に置く。
 
 | 種別 | 名前 | 値 |
 |---|---|---|
@@ -51,95 +62,109 @@ Pages プロジェクトの Custom domains にドメインを追加する。
 
 ---
 
-## 2. Mac mini の準備（初回のみ）
+## 2. コンテナを立てる
 
 ```bash
-git clone <repo> ~/Workspace/company_shape
-cd ~/Workspace/company_shape
+cp ops/env.example .env
+$EDITOR .env            # 必須: EDINET_API_KEY / CLOUDFLARE_API_TOKEN / CLOUDFLARE_ACCOUNT_ID
 
-# API キーはここだけに置く。リポジトリにも plist にも書かない。
-mkdir -p ~/.config/kaisha-no-katachi
-cp ops/env.example ~/.config/kaisha-no-katachi/env
-chmod 600 ~/.config/kaisha-no-katachi/env
-$EDITOR ~/.config/kaisha-no-katachi/env   # 必須は EDINET_API_KEY のみ
-
-# push できることを確認（SSH 鍵かデプロイキー）
-git push --dry-run origin main
+docker compose build
+docker compose run --rm etl run     # まず 1 回だけ流して確認
+docker compose up -d                # 問題なければ常駐させる
+docker compose logs -f etl
 ```
 
-### 業種分類の投入
+リポジトリは既定でホストのものをマウントする（`.:/app`）。
+ホストにチェックアウトを置きたくない場合は、`docker-compose.yml` の `volumes` を
+`repo:/app` に切り替え、`.env` に `GIT_REMOTE` と `GIT_TOKEN` を書けば
+コンテナが自分で clone する。
 
-`pipeline/data/industries.csv` を用意する。**これが無いと全社が「分類なし」になり、
-レーダーの母集団が壊れる。** 出どころは JPX「東証上場銘柄一覧」。
+### 単発実行
+
+```bash
+docker compose run --rm etl run                       # 前日分
+docker compose run --rm -e ETL_DATE_FROM=2026-06-26 etl run
+docker compose run --rm -e SKIP_DEPLOY=true etl run   # 配信せずデータ更新だけ
+docker compose run --rm etl shell                     # 調査用シェル
+```
+
+### 実行時刻を変える
+
+`docker/crontab` を編集して `docker compose build` し直す。時刻は **UTC**。
+
+---
+
+## 3. 初回の投入
+
+日次実行は前日分の差分しか取らない。過去分は単発実行で入れる。
+
+```bash
+# 1. 抽出率の確認（100 社だけ・要約なし）
+docker compose run --rm \
+  -e ETL_DATE_FROM=2026-06-01 -e ETL_DATE_TO=2026-06-30 \
+  -e ETL_LIMIT=100 -e ETL_SKIP_SUMMARIES=true etl run
+
+# 2. 全期間の投入
+docker compose run --rm \
+  -e ETL_DATE_FROM=2025-04-01 -e ETL_DATE_TO=2026-08-22 \
+  -e ETL_SKIP_SUMMARIES=true etl run
+
+# 3. 要約の生成（Message Batches API。費用が半分）
+docker compose run --rm \
+  -e ETL_SUMMARIES_ONLY=true -e ETL_SUMMARY_BATCH=true etl run
+```
+
+1 のあと、Actions ではなく**配信されたページを見て**抽出率とレイアウトを確認する。
+XBRL の勘定科目マッピングはここで必ず調整が要ると考えておくこと（`pipeline/config.py`）。
+
+### 業種分類
+
+`pipeline/data/industries.csv` を先に置く。
+**これが無いと全社が「分類なし」になり、レーダーの母集団が壊れる。**
+出どころは JPX「東証上場銘柄一覧」。
 
 ```csv
 sec_code,industry_code,industry_label,market
 4213,software,情報・通信業,グロース
 ```
 
-### 初回の一括投入
+---
 
-日次ジョブは前日分の差分しか取らない。過去分は手で流す。
+## 4. Docker を使わずに回す場合（任意）
 
 ```bash
-source ~/.config/kaisha-no-katachi/env
-
-# 有報は 6 月に集中する。まず 1 か月ぶんを 100 社だけ試す
-python3 pipeline/main.py --from 2026-06-01 --to 2026-06-30 --limit 100 --skip-summaries
-
-# レイアウトが崩れないことを確認してから全件
-python3 pipeline/main.py --from 2025-04-01 --to 2026-08-22 --skip-summaries
-
-# 要約はバッチで（費用が半分）
-python3 pipeline/main.py --summaries-only --summary-batch
-
-python3 ops/verify_db.py data/companies.db
+mkdir -p ~/.config/kaisha-no-katachi
+cp ops/env.example ~/.config/kaisha-no-katachi/env
+chmod 600 ~/.config/kaisha-no-katachi/env
+bash ops/daily-update.sh
 ```
+
+同じスクリプトなので動きは変わらない。ただし Python 3.12 / Node 22 / wrangler を
+ホスト側で揃える必要がある。macOS で常用したい場合は
+`ops/com.kaisha-no-katachi.daily.plist` を LaunchAgents に置く（`docker compose up -d` の代わり）。
 
 ---
 
-## 3. スケジューラの設置
+## 5. 更新ジョブの挙動
 
-### launchd（推奨）
+`ops/daily-update.sh` は次の順で動く。コンテナでも手元でも同じ。
 
-```bash
-sed -i '' "s|/Users/USERNAME/Workspace/company_shape|$PWD|g" ops/com.kaisha-no-katachi.daily.plist
-cp ops/com.kaisha-no-katachi.daily.plist ~/Library/LaunchAgents/
-launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.kaisha-no-katachi.daily.plist
-
-# 手動で 1 回流して確認
-launchctl kickstart -p gui/$(id -u)/com.kaisha-no-katachi.daily
-tail -f pipeline/logs/daily.log
-```
-
-launchd を勧める理由は、スリープや再起動でジョブを取りこぼしたときに復帰後へ寄せてくれること、
-出力先を設定で持てること、TCC（フルディスクアクセス）の権限を LaunchAgent 単位で扱えること。
-
-### cron
-
-常時稼働で取りこぼしを気にしないなら cron でもよい。
-
-```cron
-0 5 * * * /bin/bash -lc '$HOME/Workspace/company_shape/ops/daily-update.sh' >> $HOME/Workspace/company_shape/pipeline/logs/cron.log 2>&1
-```
-
----
-
-## 4. 日次ジョブの挙動
-
-`ops/daily-update.sh` は次の順で動く。
-
-1. `~/.config/kaisha-no-katachi/env` を読む
+1. `~/.config/kaisha-no-katachi/env` があれば読む（コンテナでは compose の env_file から入る）
 2. **二重起動を防ぐ**（前回が実行中ならスキップ。待つと EDINET を二重に叩く）
 3. 作業ツリーが綺麗か / ブランチが `main` かを確認する
 4. `git pull --rebase`
-5. `pipeline/main.py --date <前日>` — 有報 → 補助金 → 要約 → パーセンタイル再計算
+5. `pipeline/main.py --from <前日> --to <前日>` — 有報 → 補助金 → 要約 → パーセンタイル再計算
 6. **`data/companies.db` に変更が無ければ何もしない**（空コミットで CI を無駄に回さない）
 7. `ops/verify_db.py` — 落ちたらコミットも push もしない
-8. コミットして push → Actions がデプロイ
+8. コミットして push
+9. `npm run check` — 禁止語チェック → テスト → SSG ビルド → パフォーマンス予算
+10. `wrangler pages deploy out` — Cloudflare Pages へ配信
+
+9 を必ず通してから配信する。ここを飛ばすと、禁止語チェックを通らない内容が
+そのまま公開される経路ができてしまう。`SKIP_DEPLOY=true` で 9・10 を止められる。
 
 対象日は既定で**前日**。EDINET は当日分が揃うまで時間がかかる。
-特定の日をやり直したいときは `ops/daily-update.sh 2026-06-26`。
+特定の日をやり直したいときは `docker compose run --rm -e ETL_DATE_FROM=2026-06-26 etl run`。
 
 ### 健全性チェックの中身
 
@@ -152,11 +177,11 @@ launchd を勧める理由は、スリープや再起動でジョブを取りこ
 
 ---
 
-## 5. 監視
-
-日次で見る場所:
+## 6. 監視
 
 ```bash
+docker compose logs -f etl              # コンテナの標準出力
+
 tail -50 pipeline/logs/daily.log        # ジョブ全体
 tail -50 pipeline/logs/etl.log          # ETL の詳細
 cat pipeline/logs/failures.log          # 取り込みに失敗した会社
@@ -169,12 +194,15 @@ cat pipeline/logs/failures.log          # 取り込みに失敗した会社
   禁止語が広すぎるかプロンプトが弱い。`pipeline/summarize/guard.py` を見直す。
 - **`補助金: 更新 N 社 / 失敗 M 社`** — gBizINFO 側の不調。翌日直ることが多い。
 
-GitHub Actions が落ちた場合は `data/companies.db` は既に push 済みなので、
-直してから Actions を再実行すれば配信される。ETL をやり直す必要はない。
+配信だけが落ちた場合、`data/companies.db` は既に push 済みなので、
+`docker compose run --rm -e ETL_SKIP_SUBSIDIES=true ... etl run` で
+やり直すのではなく、`docker compose run --rm etl shell` に入って
+`cd apps/web && npm run check && wrangler pages deploy out` を叩けばよい。
+取り込みをやり直す必要はない。
 
 ---
 
-## 6. ロールバック
+## 7. ロールバック
 
 ```bash
 # 配信だけ戻す（Cloudflare の以前のデプロイに切り替える）
@@ -182,5 +210,10 @@ wrangler pages deployment list --project-name=kaisha-no-katachi
 
 # データを戻す
 git revert <commit>
-git push origin main    # Actions が回って前の状態が配信される
+git push origin main
 ```
+
+データを戻したあとの配信は自動では起きない（データの push で Actions は動かない）。
+`docker compose run --rm etl shell` に入って
+`cd apps/web && npm run check && wrangler pages deploy out` を叩くか、
+上の「配信だけ戻す」で以前のデプロイに切り替える。

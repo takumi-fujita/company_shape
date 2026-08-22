@@ -1,0 +1,4 @@
+# supercronic 用。コンテナ内で日次実行する。
+# 時刻は UTC。20:00 UTC = 翌 05:00 JST。
+# EDINET は当日分が揃うまで時間がかかるので、既定では前日分を取る。
+0 20 * * * /usr/local/bin/entrypoint.sh run

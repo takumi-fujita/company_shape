@@ -1,14 +1,14 @@
 name: Deploy
 
-# main への push を検知してビルドし、Cloudflare Pages に配信する。
-# 日次 ETL（Mac mini）が data/companies.db を push すると、ここが自動で回る。
+# フロントの変更を Cloudflare Pages に配信する。
+#
+# データ更新（data/companies.db）による配信はコンテナ側が wrangler で直接行うので、
+# ここでは検知しない。両方が反応すると同じ内容を二重にデプロイすることになる。
 on:
   push:
     branches: [main]
     paths:
       - 'apps/web/**'
-      - 'data/companies.db'
-      - 'fixtures/companies.json'
       - '.github/workflows/deploy.yml'
   workflow_dispatch:
 

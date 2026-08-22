@@ -44,7 +44,7 @@ python3 -m unittest discover -s pipeline/tests  # ネットワーク不要
 
 - 抽出したいのは 10 数個の要素だけで、計算リンクや按分の解決が要らない。
 - 3,612 社の初回一括処理で、1 通あたり数秒かかるモデル構築を避けたい。
-- 依存を増やさずに済む（GitHub Actions でそのまま動く）。
+- 依存を増やさずに済む（実行イメージに余計なものを積まない）。
 
 より複雑な抽出が必要になったら、`parse/xbrl.py` の `parse_instance` / `parse/extract.py` の
 `extract` を arelle 実装に差し替えればよい。呼び出し側はデータ契約の dict しか知らない。

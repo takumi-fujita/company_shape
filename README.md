@@ -11,30 +11,52 @@
 ```
 apps/web/        Next.js 15 App Router / TypeScript / CSS Modules（全ページ SSG）
 pipeline/        Python ETL。フロントとの境界は schema.sql の 1 枚だけ
-data/companies.db   SQLite（コミットする。ビルド時にだけ読む）
+docker/          実行イメージ（Python + Node + wrangler + supercronic）
+ops/             取り込みと配信の運用（手順は ops/README.md）
+data/companies.db        SQLite（コミットする。ビルド時にだけ読む）
 fixtures/companies.json  ダミー 14 社（DB が無い環境でのフォールバック）
 ```
 
 ## 動かす
 
+### フロントだけ触る（実データ不要）
+
+ダミー 14 社で全画面が動く。API キーもコンテナも要らない。
+
 ```bash
-# データ（ダミー 14 社）を生成
-python3 pipeline/seed_fixtures.py
+python3 pipeline/seed_fixtures.py   # ダミーデータを生成
 
-# ETL（実データを取り込む。API キーが要る）
-mkdir -p ~/.config/kaisha-no-katachi
-cp ops/env.example ~/.config/kaisha-no-katachi/env   # 必須は EDINET_API_KEY のみ
-chmod 600 ~/.config/kaisha-no-katachi/env
-source ~/.config/kaisha-no-katachi/env
-python3 pipeline/main.py --from 2026-06-01 --to 2026-06-30 --limit 100
-
-# フロント
 cd apps/web
 npm install
-npm run dev          # http://localhost:3000/companies/
-npm run build        # out/ に静的出力（Cloudflare Pages にそのまま配信）
-npm run check        # 禁止語チェック + テスト + SSG ビルド
+npm run dev      # http://localhost:3000/companies/
+npm run check    # 禁止語チェック + テスト + SSG ビルド + パフォーマンス予算
 ```
+
+### 実データを取り込む
+
+**Docker で回す。** ホストに要るのは Docker だけで、Python も Node も wrangler も
+イメージが持つ。実行場所は問わない。
+
+```bash
+cp ops/env.example .env && $EDITOR .env   # 必須は EDINET_API_KEY
+
+docker compose build
+docker compose run --rm etl run           # 1 回だけ
+docker compose up -d                      # 常駐（日次実行）
+docker compose logs -f etl
+```
+
+Docker を使わず直接回すこともできる（Python 3.12 / Node 22 / wrangler をホストで揃える）。
+
+```bash
+mkdir -p ~/.config/kaisha-no-katachi
+cp ops/env.example ~/.config/kaisha-no-katachi/env
+chmod 600 ~/.config/kaisha-no-katachi/env
+bash ops/daily-update.sh                    # 取り込み → push → ビルド → 配信
+SKIP_DEPLOY=true bash ops/daily-update.sh   # 配信せずデータ更新だけ
+```
+
+詳しい手順・初回の一括投入・監視・ロールバックは **`ops/README.md`**。
 
 `apps/web/lib/db.ts` は `data/companies.db` があればそれを、無ければ
 `fixtures/companies.json` を読む。ETL とフロントはこの 1 点だけで繋がっている。
@@ -50,7 +72,7 @@ npm run check        # 禁止語チェック + テスト + SSG ビルド
 | 3 | gBizINFO（補助金）、パーセンタイル全社計算 | 実装済み・**実データ未投入**（gBizINFO トークン待ち） |
 | 4 | AI 要約 + ガード | 実装済み・**実生成は未実行**（ANTHROPIC_API_KEY 待ち） |
 | 5 | ランキング・業種ページ、sitemap、SEO | 完了 |
-| 6 | Cloudflare Pages デプロイ、cron | 実装済み・**未設置**（Cloudflare / Mac mini の設定待ち） |
+| 6 | Cloudflare Pages デプロイ、日次スケジュール | 実装済み・**未設置**（Cloudflare の作成と `.env` の記入待ち） |
 
 ## 変えてはいけないもの
 
@@ -68,20 +90,21 @@ npm run check        # 禁止語チェック + テスト + SSG ビルド
 ## デプロイと日次更新
 
 ```
-Mac mini（毎日 5:00 JST）
+Docker コンテナ（常駐 / 20:00 UTC = 翌 05:00 JST）
   EDINET / gBizINFO / Anthropic → pipeline/main.py → data/companies.db
                                                     → git commit && push
-GitHub push
-  └→ Actions（禁止語・テスト・SSG・予算）→ Cloudflare Pages
+  → 禁止語・テスト・SSG・予算 → wrangler → Cloudflare Pages
 ```
 
-**手順は `ops/README.md`。** Cloudflare Pages の作成、GitHub Secrets、
-Mac mini の launchd / cron 設置、初回の一括投入、監視、ロールバックまで書いてある。
+**取り込みから配信までを 1 つのコンテナで完結させる。**
+GitHub に依存せず、コンテナが動く場所ならどこでも同じように回る。
 
-- ビルドは Cloudflare ではなく GitHub Actions で行い、`out/` をアップロードする。
-  CI を通ったものだけが配信される。
+- 配信前に必ず `npm run check`（禁止語・テスト・SSG・予算）を通す。
+  ここを飛ばすと検査を通らない内容が公開される経路ができる。
+- GitHub Actions はフロントの変更を配信する `deploy.yml` と CI だけ。
+  データ更新による配信には関与しない。
 - `ops/verify_db.py` が配信前の関門。**要約に評価語が入っていないか**を
-  ここでもう一度見る。落ちたらコミットも push もしない。
+  ここでもう一度見る。落ちたらコミットも配信もしない。
 - `public/_redirects` で `/` → `/companies/` を 301。
 - `robots.txt` が指す `/sitemap.xml` は postbuild スクリプトが sitemap index として生成する。
 - `npm run check:budget` が JS 150KB gzip / 検索インデックス 2MB gzip を検査する。
