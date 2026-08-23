@@ -46,7 +46,7 @@ setup_git() {
   git config user.name  "${GIT_AUTHOR_NAME:-company-shape-bot}"
   git config user.email "${GIT_AUTHOR_EMAIL:-bot@company-shape.invalid}"
 
-  if [ "${SKIP_PUSH:-false}" = "true" ]; then
+  if [ "${SKIP_PUSH:-false}" = "true" ] || [ "${SKIP_GIT:-false}" = "true" ]; then
     log "SKIP_PUSH=true のため、git の認証情報は確かめません"
     return 0
   fi

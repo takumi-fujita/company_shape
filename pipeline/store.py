@@ -35,12 +35,17 @@ def _load_periods(conn, edinet_code):
     return {r["label"]: dict(r) for r in rows}
 
 
-def _merge_periods(existing, incoming):
+def _merge_periods(existing, incoming, prefer_incoming=True):
     """過去の提出分と今回分をマージする。
 
     1 通の有報では 5 期すべては埋まらない（営業利益は当期・前期のみ、平均年収は当期のみ）。
-    毎年の提出を重ねて系列を育てる。今回取れた値だけを上書きし、
-    取れなかった項目は既存値を残す（None で上書きしない）。
+    毎年の提出を重ねて系列を育てる。
+
+    同じ期を 2 通の有報が別の値で報告することがある（遡及修正など）。そのときは
+    **新しい提出の値を採る**。単に「最後に処理したもの」を採ると、5 年分をまとめて
+    投入するときに取り込み順で結果が変わってしまう。
+
+    prefer_incoming=False（今回のほうが古い提出）のときは、既存が null の欄だけ埋める。
     """
     merged = {}
     for label, row in existing.items():
@@ -56,11 +61,12 @@ def _merge_periods(existing, incoming):
     for p in incoming:
         cur = merged.get(p["label"]) or {"label": p["label"], "segments": []}
         for key in ("revenue", "operating_profit", "employees", "avg_salary"):
-            if p.get(key) is not None:
-                cur[key] = p[key]
-            else:
+            value = p.get(key)
+            if value is None:
                 cur.setdefault(key, None)
-        if p.get("segments"):
+            elif prefer_incoming or cur.get(key) is None:
+                cur[key] = value
+        if p.get("segments") and (prefer_incoming or not cur.get("segments")):
             cur["segments"] = p["segments"]
         cur.setdefault("segments", [])
         merged[p["label"]] = cur
@@ -74,47 +80,74 @@ def _merge_periods(existing, incoming):
     return ordered[-config.PERIODS :]
 
 
+#: 「その提出時点のスナップショット」であるフィールド。
+#: 古い提出を後から取り込んでも、これらを古い値に戻さない。
+SNAPSHOT_FIELDS = (
+    "name", "name_kana", "market", "sec_code", "fiscal_end", "filed_at",
+    "consolidated", "employees", "avg_salary", "avg_tenure", "cash",
+)
+
+
 def upsert_company(conn, record, industry, updated_at):
     """1 社分を書き込む。派生値（runway / growth）はここで確定させる。
+
+    5 年分をまとめて投入するとき、同じ会社の有報が年ごとに何通も流れてくる。
+    期別データ（fiscal_periods）はマージすればよいが、従業員数・現預金・提出日などは
+    「最新の提出のもの」でなければならない。古い提出を後から取り込んだ場合に
+    最新の値を巻き戻さないよう、filed_at を見て判断する。
 
     industry: {"code": ..., "label": ...}
     """
     code = record["edinet_code"]
-    periods = _merge_periods(_load_periods(conn, code), record["periods"])
+    existing = conn.execute(
+        "SELECT * FROM companies WHERE edinet_code = ?", (code,)
+    ).fetchone()
+    existing = dict(existing) if existing else None
 
+    incoming_filed = record.get("filed_at") or ""
+    previous_filed = (existing or {}).get("filed_at") or ""
+    # 初回、または今回のほうが新しい（同日を含む）ときだけスナップショットを更新する。
+    is_newer = existing is None or incoming_filed >= previous_filed
+
+    periods = _merge_periods(_load_periods(conn, code), record["periods"], prefer_incoming=is_newer)
+
+    values = {}
+    for field in SNAPSHOT_FIELDS:
+        incoming = record.get(field)
+        if field == "consolidated":
+            incoming = 1 if record.get("consolidated") else 0
+        values[field] = incoming if is_newer else existing.get(field)
+
+    # 業種は CSV 由来で提出時点に依存しないので常に最新を当てる。
+    values["industry_code"] = industry["code"]
+    values["industry_label"] = industry["label"]
+    values["corp_number"] = record.get("corp_number") or (existing or {}).get("corp_number")
+    if not is_newer:
+        # 市場区分だけは industries.csv から来るので、古い提出でも新しい値を残す。
+        values["market"] = industry.get("market") or existing.get("market")
+
+    # 派生値はマージ後の系列（＝最新期を含む）から作るので、取り込み順に依存しない。
     latest = periods[-1] if periods else {}
     cost = derive.monthly_cost(latest.get("revenue"), latest.get("operating_profit"))
-    cash = record.get("cash")
-    runway = derive.derive_runway(cash, cost)
-    growth = derive.cagr(periods)
+    values["monthly_cost"] = cost
+    values["runway"] = derive.derive_runway(values["cash"], cost)
+    values["growth"] = derive.cagr(periods)
+    values["updated_at"] = updated_at
 
-    conn.execute(
-        """INSERT INTO companies (edinet_code, corp_number, name, name_kana, market,
-             sec_code, industry_code, industry_label, fiscal_end, filed_at, consolidated,
-             employees, avg_salary, avg_tenure, cash, monthly_cost, runway, growth,
-             summary, tags, updated_at)
-           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,
-                   (SELECT summary FROM companies WHERE edinet_code = ?),
-                   (SELECT tags    FROM companies WHERE edinet_code = ?), ?)
-           ON CONFLICT(edinet_code) DO UPDATE SET
-             corp_number=excluded.corp_number, name=excluded.name, market=excluded.market,
-             sec_code=excluded.sec_code, industry_code=excluded.industry_code,
-             industry_label=excluded.industry_label, fiscal_end=excluded.fiscal_end,
-             filed_at=excluded.filed_at, consolidated=excluded.consolidated,
-             employees=excluded.employees, avg_salary=excluded.avg_salary,
-             avg_tenure=excluded.avg_tenure, cash=excluded.cash,
-             monthly_cost=excluded.monthly_cost, runway=excluded.runway,
-             growth=excluded.growth, updated_at=excluded.updated_at""",
-        (
-            code, record.get("corp_number"), record.get("name"), record.get("name_kana"),
-            record.get("market"), record.get("sec_code"), industry["code"], industry["label"],
-            record.get("fiscal_end"), record.get("filed_at"),
-            1 if record.get("consolidated") else 0,
-            record.get("employees"), record.get("avg_salary"), record.get("avg_tenure"),
-            cash, cost, runway, growth,
-            code, code, updated_at,
-        ),
-    )
+    if existing is None:
+        columns = ["edinet_code"] + list(values)
+        conn.execute(
+            "INSERT INTO companies (%s) VALUES (%s)"
+            % (", ".join(columns), ", ".join("?" * len(columns))),
+            [code] + [values[c] for c in columns[1:]],
+        )
+    else:
+        # summary / tags はここでは触らない（要約は別経路で入れる）。
+        conn.execute(
+            "UPDATE companies SET %s WHERE edinet_code = ?"
+            % ", ".join("%s = ?" % c for c in values),
+            list(values.values()) + [code],
+        )
 
     conn.execute("DELETE FROM fiscal_periods WHERE edinet_code = ?", (code,))
     for seq, p in enumerate(periods):

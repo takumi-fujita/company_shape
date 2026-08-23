@@ -50,6 +50,13 @@ logging.disable(logging.CRITICAL)
 class MainCase(unittest.TestCase):
     def setUp(self):
         self.dir = tempfile.mkdtemp()
+        # 要約の入力キャッシュは本番と同じ既定パスを見る。テストが
+        # pipeline/cache/descriptions/ に合成データを書き込むと、実在の
+        # EDINET コードと衝突したときに偽の原文から要約が作られる。
+        from summarize import inputs as _inputs
+
+        self._cache_dir = _inputs.CACHE_DIR
+        _inputs.CACHE_DIR = os.path.join(self.dir, "descriptions")
         self.db = os.path.join(self.dir, "data", "companies.db")
         self._list = edinet.list_documents
         self._zip = edinet.download_zip
@@ -61,6 +68,9 @@ class MainCase(unittest.TestCase):
         industries.CSV_PATH = os.path.join(self.dir, "missing.csv")
 
     def tearDown(self):
+        from summarize import inputs as _inputs
+
+        _inputs.CACHE_DIR = self._cache_dir
         edinet.list_documents = self._list
         edinet.download_zip = self._zip
 
@@ -430,3 +440,81 @@ class TestIndustriesOnly(MainCase):
         self.write_csv(sec_code="9999")
         self.assertEqual(etl.run(self.args(industries_only=True)), 0)
         self.assertEqual(self.company()["industry_code"], "unknown")
+
+
+class TestEtlLock(unittest.TestCase):
+    """ETL 実行中に DB を開かせないロック。
+
+    バインドマウント越しの同時アクセスは読むだけで DB を壊す。
+    リトライではなく機械的に止める。
+    """
+
+    def setUp(self):
+        import etl_lock
+
+        self.etl_lock = etl_lock
+        self.dir = tempfile.mkdtemp()
+        self.db = os.path.join(self.dir, "data", "companies.db")
+        os.makedirs(os.path.dirname(self.db), exist_ok=True)
+
+    def test_lock_is_created_and_removed(self):
+        self.assertFalse(self.etl_lock.is_locked(self.db))
+        with self.etl_lock.Lock(self.db):
+            self.assertTrue(self.etl_lock.is_locked(self.db))
+            info = self.etl_lock.read(self.db)
+            self.assertEqual(info["pid"], os.getpid())
+            self.assertIn("started_at", info)
+        self.assertFalse(self.etl_lock.is_locked(self.db))
+
+    def test_lock_is_removed_on_exception(self):
+        try:
+            with self.etl_lock.Lock(self.db):
+                raise ValueError("失敗")
+        except ValueError:
+            pass
+        self.assertFalse(self.etl_lock.is_locked(self.db), "例外で抜けてもロックが残っている")
+
+    def test_double_acquire_is_refused(self):
+        with self.etl_lock.Lock(self.db):
+            with self.assertRaises(RuntimeError):
+                self.etl_lock.Lock(self.db).acquire()
+
+    def test_lock_sits_next_to_the_db(self):
+        self.assertEqual(
+            self.etl_lock.lock_path(self.db),
+            os.path.join(self.dir, "data", ".etl-running"),
+        )
+
+    def test_describe_is_empty_without_lock(self):
+        self.assertEqual(self.etl_lock.describe(self.db), "")
+        with self.etl_lock.Lock(self.db):
+            self.assertIn("ETL が実行中", self.etl_lock.describe(self.db))
+
+
+class TestLockDuringRun(MainCase):
+    """main() の実行中はロックが立ち、終了後に消えること。"""
+
+    def args(self, **kw):
+        a = Args(self.db, **kw)
+        a.industries_only = kw.get("industries_only", False)
+        return a
+
+    def test_lock_is_held_during_the_run_and_released_after(self):
+        import etl_lock
+
+        seen = {}
+
+        original = etl.process_document
+
+        def spy(conn, doc, table, updated_at):
+            seen["locked"] = etl_lock.is_locked(self.db)
+            return original(conn, doc, table, updated_at)
+
+        etl.process_document = spy
+        try:
+            etl.main(["--date", "2026-06-26", "--db", self.db])
+        finally:
+            etl.process_document = original
+
+        self.assertTrue(seen.get("locked"), "ETL 中にロックが立っていない")
+        self.assertFalse(etl_lock.is_locked(self.db), "ETL 後にロックが残っている")

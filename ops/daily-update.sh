@@ -12,6 +12,7 @@
 #   bash ops/daily-update.sh 2026-06-26      # 日付を指定
 #   ETL_DATE_FROM=2025-04-01 ETL_DATE_TO=2026-08-22 bash ops/daily-update.sh
 #   SKIP_DEPLOY=true bash ops/daily-update.sh # 配信せずデータ更新だけ
+#   SKIP_GIT=true    bash ops/daily-update.sh # git を一切触らない（一括投入用）
 #
 # 方針:
 # - 差分実行。前日に提出のあった会社だけを処理する。全社の再取得はしない。
@@ -171,6 +172,8 @@ ETL_ARGS=(--from "$DATE_FROM" --to "$DATE_TO")
 [ "${ETL_LIMIT:-0}" != "0" ] && [ -n "${ETL_LIMIT:-}" ] && ETL_ARGS+=(--limit "$ETL_LIMIT")
 [ "${ETL_SKIP_SUMMARIES:-false}" = "true" ] && ETL_ARGS+=(--skip-summaries)
 [ "${ETL_SKIP_SUBSIDIES:-false}" = "true" ] && ETL_ARGS+=(--skip-subsidies)
+[ "${ETL_SUBSIDIES_ONLY:-false}" = "true" ] && ETL_ARGS+=(--subsidies-only)
+[ "${ETL_INDUSTRIES_ONLY:-false}" = "true" ] && ETL_ARGS+=(--industries-only)
 [ "${ETL_SUMMARIES_ONLY:-false}" = "true" ] && ETL_ARGS+=(--summaries-only)
 [ "${ETL_SUMMARY_BATCH:-false}" = "true" ] && ETL_ARGS+=(--summary-batch)
 
@@ -178,10 +181,18 @@ log "===== 更新 開始（対象 ${DATE_FROM} .. ${DATE_TO}）====="
 
 # --- 事前チェック ----------------------------------------------------------
 [ -n "${EDINET_API_KEY:-}" ] || fail "EDINET_API_KEY が未設定です"
-git diff --quiet && git diff --cached --quiet || fail "作業ツリーに未コミットの変更があります"
 
-CURRENT_BRANCH="$(git rev-parse --abbrev-ref HEAD)"
-[ "$CURRENT_BRANCH" = "$BRANCH" ] || fail "ブランチが $CURRENT_BRANCH です（$BRANCH で実行してください）"
+# git を触らないモード（一括投入など）では、作業ツリーの状態もブランチも問わない。
+# コミットしないので、他の変更を巻き込む心配がないため。
+if [ "${SKIP_GIT:-false}" = "true" ]; then
+  log "SKIP_GIT=true のため git を触りません（コミットも push もしません）"
+  SKIP_PUSH=true
+else
+  git diff --quiet && git diff --cached --quiet || fail "作業ツリーに未コミットの変更があります"
+
+  CURRENT_BRANCH="$(git rev-parse --abbrev-ref HEAD)"
+  [ "$CURRENT_BRANCH" = "$BRANCH" ] || fail "ブランチが $CURRENT_BRANCH です（$BRANCH で実行してください）"
+fi
 
 if [ "${SKIP_PUSH:-false}" = "true" ]; then
   log "SKIP_PUSH=true のため、リモートとのやり取りを行いません"
@@ -232,6 +243,15 @@ fi
 
 # --- コミットと push -------------------------------------------------------
 COMPANY_COUNT="$(count_companies data/companies.db)"
+
+if [ "${SKIP_GIT:-false}" = "true" ]; then
+  log "データを更新しました（${COMPANY_COUNT} 社）。SKIP_GIT=true のためコミットしません。"
+  emit_changed true
+  deploy_site
+  log "===== 更新 終了 ====="
+  exit 0
+fi
+
 git add data/companies.db
 git commit --quiet -m "data: ${DATE_FROM} .. ${DATE_TO} の提出分を反映（${COMPANY_COUNT} 社）"
 

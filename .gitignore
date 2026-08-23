@@ -26,3 +26,4 @@ env
 env.local
 !.env.example
 !ops/env.example
+data/.etl-running

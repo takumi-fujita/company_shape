@@ -100,10 +100,16 @@ class TestRequestShape(unittest.TestCase):
         self.assertFalse(claude.OUTPUT_SCHEMA["additionalProperties"])
 
     def test_tag_count_is_enforced_by_prompt_and_guard(self):
-        """スキーマで縛れないぶん、プロンプトとガードの両方で押さえる。"""
+        """スキーマで縛れないぶん、プロンプトとガードの両方で押さえる。
+
+        規約外の tags は捨てるが、要約は残す（本文には非がないため）。
+        """
         self.assertIn("最大 %d つ" % guard.MAX_TAGS, claude.load_prompt())
         over = ["あ", "い", "う", "え", "お"]
-        self.assertFalse(guard.check("受託開発が中心。", over).accepted)
+        result = guard.check("受託開発が中心。", over)
+        self.assertTrue(result.accepted)
+        self.assertEqual(result.tags, [], "規約外の tags が残っている")
+        self.assertTrue(result.tags_dropped)
 
     def test_prompt_forbids_evaluative_language(self):
         prompt = claude.load_prompt()

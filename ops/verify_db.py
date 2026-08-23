@@ -8,6 +8,7 @@
   python3 ops/verify_db.py data/companies.db --min-companies 3400
 """
 import json
+import os
 import sqlite3
 import sys
 
@@ -157,6 +158,16 @@ def main(argv):
     if not args:
         print("usage: verify_db.py <path/to/companies.db> [--min-companies N]", file=sys.stderr)
         return 2
+
+    # ETL が動いている間は開かない。バインドマウント越しの同時アクセスは
+    # 読むだけで DB を壊す（実際に壊したことがある）。
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "pipeline"))
+    import etl_lock
+
+    if etl_lock.is_locked(args[0]):
+        print("NG  %s。終わるまで待ってください。" % etl_lock.describe(args[0]), file=sys.stderr)
+        return 1
+
     conn = sqlite3.connect(args[0])
 
     integrity = conn.execute("PRAGMA integrity_check").fetchone()[0]

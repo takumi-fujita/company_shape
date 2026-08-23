@@ -24,6 +24,7 @@ import traceback
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import config  # noqa: E402
+import etl_lock  # noqa: E402
 import industries  # noqa: E402
 import store  # noqa: E402
 from fetch import edinet  # noqa: E402
@@ -360,10 +361,16 @@ def main(argv=None):
 
     setup_logging(args.verbose)
     try:
-        return run(args)
+        # ETL が動いている間、フロントのビルドや verify_db が DB を開かないようにする。
+        # バインドマウント越しの同時アクセスは読むだけでファイルを壊すため。
+        with etl_lock.Lock(args.db):
+            return run(args)
     except edinet.MissingApiKey as e:
         log.error("%s", e)
         return 2
+    except RuntimeError as e:
+        log.error("%s", e)
+        return 3
 
 
 if __name__ == "__main__":

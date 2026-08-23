@@ -79,6 +79,11 @@ SKIP_DEPLOY=true bash ops/daily-update.sh   # 配信せずデータ更新だけ
 
 詳しい手順・初回の一括投入・監視・ロールバックは **`ops/README.md`**。
 
+> **ETL の実行中にフロントをビルドしないこと。** ETL はコンテナから、ビルドはホストから
+> 同じ SQLite をバインドマウント越しに開くため、`database disk image is malformed` に
+> なります（DB は壊れていません）。ETL 中にフロントを触るときは
+> `COMPANIES_DB=/nonexistent.db npm run dev` でダミー 14 社を使ってください。
+
 `apps/web/lib/db.ts` は `data/companies.db` があればそれを、無ければ
 `fixtures/companies.json` を読む。ETL とフロントはこの 1 点だけで繋がっている。
 `COMPANIES_DB=/path/to.db` で別の DB を指せる（ETL の出力でフロントを検証するときに使う）。

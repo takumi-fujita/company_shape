@@ -10,6 +10,7 @@
 import 'server-only';
 import fs from 'node:fs';
 import path from 'node:path';
+import { assertEtlNotRunning, openWithRetry } from './sqlite';
 import type {
   Company,
   FiscalPeriod,
@@ -41,13 +42,21 @@ function parseJson<T>(raw: unknown, fallback: T): T {
 }
 
 function loadFromSqlite(): Dataset {
+  // ETL 実行中は開かない。リトライではなく即座に止める。
+  assertEtlNotRunning(DB_PATH);
+
   // node:sqlite は Node 22.5+ に同梱。native モジュールを増やさないために採用している。
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const { DatabaseSync } = require('node:sqlite') as typeof import('node:sqlite');
   // readOnly は Node 22.13+ で利用可能。@types/node が追いついていないため cast する。
-  const db = new DatabaseSync(DB_PATH, { readOnly: true } as ConstructorParameters<
-    typeof DatabaseSync
-  >[1]);
+  // ETL の書き込み中は一時的に開けないことがあるので数回やり直す。
+  const db = openWithRetry(
+    () =>
+      new DatabaseSync(DB_PATH, { readOnly: true } as ConstructorParameters<
+        typeof DatabaseSync
+      >[1]),
+    DB_PATH,
+  );
 
   const periodsByCompany = new Map<string, FiscalPeriod[]>();
   for (const r of db.prepare('SELECT * FROM fiscal_periods ORDER BY edinet_code, seq').all() as any[]) {

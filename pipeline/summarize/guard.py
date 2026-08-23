@@ -4,9 +4,13 @@
 このサイトは企業にとって不都合な数字を出す。要約に評価が 1 語でも混ざれば
 信用毀損のリスクになるので、**疑わしければ破棄する**側に倒す。
 
-  1. 評価語・予測・推測表現にヒット → 破棄
-  2. 200 字超 → 破棄
-  3. tags が JSON として壊れている / 規約外 → 破棄
+  1. 評価語・予測・推測表現にヒット → 破棄（**要約ごと落とす**）
+  2. 200 字超 → 文の途中で切らずに、収まる範囲の文だけ残す
+  3. tags が JSON として壊れている / 規約外 → tags だけ捨てて要約は残す
+
+2 と 3 で要約ごと落とさないのは、本文自体は事実の再記述として問題が無いのに
+「長い」「タグが規約外」だけで 3 割が空欄になっていたため。
+評価語だけは 1 語でも要約ごと破棄する。ここは緩めない。
 
 破棄した会社は summary = null で保存し、UI 側は AI 要約カードをセクションごと
 非表示にする（実装済み）。数十社が空欄になっても構わない。
@@ -66,13 +70,18 @@ class Rejection(object):
 
 
 class GuardResult(object):
-    __slots__ = ("summary", "tags", "reason", "matched")
+    __slots__ = ("summary", "tags", "reason", "matched", "trimmed", "tags_dropped")
 
-    def __init__(self, summary=None, tags=None, reason=None, matched=None):
+    def __init__(self, summary=None, tags=None, reason=None, matched=None,
+                 trimmed=False, tags_dropped=False):
         self.summary = summary
         self.tags = tags
         self.reason = reason
         self.matched = matched
+        #: 200 字に収めるため末尾の文を落としたか
+        self.trimmed = trimmed
+        #: tags が規約外だったので捨てたか
+        self.tags_dropped = tags_dropped
 
     @property
     def accepted(self):
@@ -80,7 +89,13 @@ class GuardResult(object):
 
     def __repr__(self):
         if self.accepted:
-            return "GuardResult(accepted, %d 字, tags=%s)" % (len(self.summary), self.tags)
+            notes = ""
+            if self.trimmed:
+                notes += ", 末尾を短縮"
+            if self.tags_dropped:
+                notes += ", tags 破棄"
+            return "GuardResult(accepted, %d 字, tags=%s%s)" % (
+                count_chars(self.summary), self.tags, notes)
         return "GuardResult(rejected: %s%s)" % (
             self.reason, " 「%s」" % self.matched if self.matched else ""
         )
@@ -97,6 +112,24 @@ def find_banned(text):
         return None
     m = _BANNED_RE.search(unicodedata.normalize("NFKC", text))
     return m.group(0) if m else None
+
+
+def trim_to_limit(text):
+    """200 字に収まるところまで、**文の切れ目で**削る。
+
+    途中で切ると意味が変わるので、句点で区切って収まる文だけを残す。
+    1 文目すら収まらない場合は None（＝この要約は使えない）。
+    """
+    if count_chars(text) <= MAX_SUMMARY_CHARS:
+        return text
+    sentences = [s for s in re.split(r"(?<=。)", text) if s]
+    kept = ""
+    for sentence in sentences:
+        if count_chars(kept + sentence) > MAX_SUMMARY_CHARS:
+            break
+        kept += sentence
+    kept = kept.strip()
+    return kept or None
 
 
 def _normalize_tags(value):
@@ -129,28 +162,34 @@ def check(summary, tags):
 
     text = str(summary).strip()
 
+    # 長すぎる場合は文の切れ目まで削る。1 文目すら収まらなければ使えない。
+    trimmed = False
     if count_chars(text) > MAX_SUMMARY_CHARS:
-        return GuardResult(reason=Rejection.TOO_LONG)
+        shortened = trim_to_limit(text)
+        if shortened is None:
+            return GuardResult(reason=Rejection.TOO_LONG)
+        text, trimmed = shortened, True
 
+    # 評価語だけは要約ごと破棄する。ここは緩めない。
     hit = find_banned(text)
     if hit:
         return GuardResult(reason=Rejection.BANNED_WORD, matched=hit)
 
+    # tags が規約外なら tags だけ捨てる。要約本文には非がないため。
     normalized = _normalize_tags(tags)
-    if normalized is None:
-        return GuardResult(reason=Rejection.TAGS_NOT_JSON)
+    tags_dropped = False
+    if normalized is None or len(normalized) > MAX_TAGS:
+        normalized, tags_dropped = [], True
+    else:
+        for tag in normalized:
+            if (
+                count_chars(tag) > MAX_TAG_CHARS
+                or any(c in tag for c in "。、．，!?！？")
+                or find_banned(tag)
+            ):
+                # 評価語入りのタグも「捨てる」で足りる。本文は既に検査済み。
+                normalized, tags_dropped = [], True
+                break
 
-    if len(normalized) > MAX_TAGS:
-        return GuardResult(reason=Rejection.TAGS_INVALID)
-
-    for tag in normalized:
-        if count_chars(tag) > MAX_TAG_CHARS:
-            return GuardResult(reason=Rejection.TAGS_INVALID)
-        # タグは名詞句。文にしない。
-        if any(c in tag for c in "。、．，!?！？"):
-            return GuardResult(reason=Rejection.TAGS_INVALID)
-        hit = find_banned(tag)
-        if hit:
-            return GuardResult(reason=Rejection.BANNED_WORD, matched=hit)
-
-    return GuardResult(summary=text, tags=normalized)
+    return GuardResult(summary=text, tags=normalized,
+                       trimmed=trimmed, tags_dropped=tags_dropped)

@@ -179,3 +179,68 @@ class TestRebuildDerived(StoreCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestOutOfOrderFilings(StoreCase):
+    """5 年分を投入するとき、取り込み順で最新スナップショットが壊れないこと。"""
+
+    def test_older_filing_does_not_overwrite_newer_snapshot(self):
+        newer = extract(fiscal_year_end="2027-03-31", employees=(300, 310, 320, 330, 340),
+                        cash=5000, avg_salary_yen=7000000, filed_at="2027-06-25")
+        store.upsert_company(self.conn, newer, INDUSTRY, "2027-08-20")
+
+        older = extract(fiscal_year_end="2026-03-31", employees=(280, 290, 300, 306, 312),
+                        cash=2180, avg_salary_yen=6480000, filed_at="2026-06-26")
+        store.upsert_company(self.conn, older, INDUSTRY, "2027-08-20")
+
+        c = self.company()
+        self.assertEqual(c["filed_at"], "2027-06-25", "提出日が巻き戻っている")
+        self.assertEqual(c["employees"], 340, "従業員数が古い提出の値に戻っている")
+        self.assertEqual(c["cash"], 5000, "現預金が古い提出の値に戻っている")
+        self.assertEqual(c["avg_salary"], 7000)
+        self.assertEqual(c["fiscal_end"], "2027-03")
+
+    def test_older_filing_still_fills_missing_periods(self):
+        """スナップショットは守りつつ、期別データは古い提出からも埋める。"""
+        newer = extract(fiscal_year_end="2027-03-31", filed_at="2027-06-25")
+        store.upsert_company(self.conn, newer, INDUSTRY, "2027-08-20")
+        before = {r["label"]: r["operating_profit"] for r in self.periods()}
+        self.assertIsNone(before["25/3"])
+
+        older = extract(fiscal_year_end="2026-03-31",
+                        operating_profits=(450, 500, 560, 620, 700), filed_at="2026-06-26")
+        store.upsert_company(self.conn, older, INDUSTRY, "2027-08-20")
+        after = {r["label"]: r["operating_profit"] for r in self.periods()}
+        self.assertEqual(after["25/3"], 620, "古い提出から営業利益が埋まっていない")
+        self.assertEqual(after["27/3"], before["27/3"], "最新期が壊れている")
+
+    def test_same_day_refiling_updates_the_snapshot(self):
+        """同じ提出日での取り直し（--force）は最新扱いで上書きする。"""
+        first = extract(cash=2180)
+        store.upsert_company(self.conn, first, INDUSTRY, "2026-08-20")
+        second = extract(cash=3000)
+        store.upsert_company(self.conn, second, INDUSTRY, "2026-08-21")
+        self.assertEqual(self.company()["cash"], 3000)
+
+    def test_ascending_order_matches_descending_order(self):
+        """古い順に入れても新しい順に入れても、同じ結果になること。"""
+        def build(dirs):
+            conn = store.connect(os.path.join(tempfile.mkdtemp(), "data", "t.db"))
+            for year in dirs:
+                r = extract(fiscal_year_end="%d-03-31" % year,
+                            filed_at="%d-06-25" % year,
+                            employees=tuple(100 + year - 2020 + i for i in range(5)),
+                            cash=1000 * (year - 2020))
+                store.upsert_company(conn, r, INDUSTRY, "2027-08-20")
+            row = dict(conn.execute("SELECT * FROM companies").fetchone())
+            periods = [dict(x) for x in conn.execute(
+                "SELECT label, revenue, operating_profit FROM fiscal_periods ORDER BY seq")]
+            conn.close()
+            return row, periods
+
+        asc = build([2024, 2025, 2026])
+        desc_order = build([2026, 2025, 2024])
+        self.assertEqual(asc[0]["filed_at"], desc_order[0]["filed_at"])
+        self.assertEqual(asc[0]["employees"], desc_order[0]["employees"])
+        self.assertEqual(asc[0]["cash"], desc_order[0]["cash"])
+        self.assertEqual(asc[1], desc_order[1])
