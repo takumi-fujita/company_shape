@@ -5,10 +5,24 @@ import { useEffect, useMemo, useState } from 'react';
 import CompanyTable from './CompanyTable';
 import styles from './CompanyBrowser.module.css';
 import { count, normalize, num } from '@/lib/format';
-import { PAGE_SIZE } from '@/lib/thresholds';
+import {
+  buildPageItems,
+  clampPage,
+  PAGE_SIZE_OPTIONS,
+  pageRange,
+  parsePageSize,
+  totalPages,
+} from '@/lib/pagination';
 import type { IndustryStat, SearchIndexEntry } from '@/lib/types';
 
 type SortKey = 'emp' | 'sal' | 'ten' | 'run';
+
+const SORT_KEYS: SortKey[] = ['emp', 'sal', 'ten', 'run'];
+const DEFAULT_SORT: SortKey = 'emp';
+
+function parseSort(value: string | null): SortKey {
+  return SORT_KEYS.includes(value as SortKey) ? (value as SortKey) : DEFAULT_SORT;
+}
 
 const SORTS: { key: SortKey; label: string }[] = [
   { key: 'emp', label: '従業員数が多い順' },
@@ -51,13 +65,34 @@ export default function CompanyBrowser({ industryStats }: Props) {
   const router = useRouter();
   const params = useSearchParams();
   const query = params.get('q') ?? '';
+  const perPage = parsePageSize(params.get('per'));
+  // 並び順も URL に持つ。ページ番号だけ URL にあると、共有した URL や
+  // ブラウザバックで「別の並びの N ページ目」が開いてしまう。
+  const sort = parseSort(params.get('sort'));
 
   const [entries, setEntries] = useState<SearchIndexEntry[] | null>(null);
   const [failed, setFailed] = useState(false);
-  const [sort, setSort] = useState<SortKey>('emp');
-  const [shown, setShown] = useState(PAGE_SIZE);
   const [picks, setPicks] = useState<Picks>({});
   const [openFilter, setOpenFilter] = useState<PickKey | null>(null);
+
+  /**
+   * 検索語・ページ・件数は URL に持つ。詳細ページからブラウザバックで戻ったときに
+   * 同じ画面へ戻せるようにするため（ハンドオフ「一覧の検索条件は保持」）。
+   * ページ送りで履歴が積み上がらないよう replace で入れ替える。
+   */
+  function updateUrl(next: { q?: string; page?: number; per?: number; sort?: SortKey }) {
+    const sp = new URLSearchParams(params.toString());
+    const set = (key: string, value: string | undefined) => {
+      if (value) sp.set(key, value);
+      else sp.delete(key);
+    };
+    if ('q' in next) set('q', next.q?.trim() || undefined);
+    if ('per' in next) set('per', next.per === undefined ? undefined : String(next.per));
+    if ('sort' in next) set('sort', next.sort && next.sort !== DEFAULT_SORT ? next.sort : undefined);
+    if ('page' in next) set('page', !next.page || next.page === 1 ? undefined : String(next.page));
+    const qs = sp.toString();
+    router.replace(qs ? `/companies/?${qs}` : '/companies/', { scroll: false });
+  }
 
   useEffect(() => {
     let alive = true;
@@ -72,9 +107,6 @@ export default function CompanyBrowser({ industryStats }: Props) {
       alive = false;
     };
   }, []);
-
-  // 検索語が変わったら表示件数を戻す。
-  useEffect(() => setShown(PAGE_SIZE), [query]);
 
   const medianByIndustry = useMemo(() => {
     const m = new Map<string, IndustryStat>();
@@ -137,12 +169,22 @@ export default function CompanyBrowser({ industryStats }: Props) {
     return filtered.slice().sort((a, b) => desc(key(a), key(b)));
   }, [filtered, sort]);
 
-  const visible = sorted.slice(0, shown);
+  const pageCount = totalPages(sorted.length, perPage);
+  // URL のページ番号は信用しない。件数やフィルタが変われば範囲外になる。
+  const page = clampPage(params.get('page'), pageCount);
+  const visible = sorted.slice((page - 1) * perPage, page * perPage);
+  const span = pageRange(page, perPage, sorted.length);
+  const pageItems = buildPageItems(page, pageCount);
+
+  function goToPage(next: number) {
+    updateUrl({ page: clampPage(next, pageCount) });
+  }
 
   function pick(key: PickKey, value: string) {
     setPicks((p) => ({ ...p, [key]: value }));
     setOpenFilter(null);
-    setShown(PAGE_SIZE);
+    // 絞り込みが変われば件数が変わるので、先頭ページへ戻す。
+    updateUrl({ page: 1 });
   }
 
   function toggle(key: PickKey) {
@@ -153,7 +195,7 @@ export default function CompanyBrowser({ industryStats }: Props) {
         return next;
       });
       setOpenFilter(null);
-      setShown(PAGE_SIZE);
+      updateUrl({ page: 1 });
     } else {
       setOpenFilter((o) => (o === key ? null : key));
     }
@@ -206,8 +248,7 @@ export default function CompanyBrowser({ industryStats }: Props) {
             onClick={() => {
               setPicks({});
               setOpenFilter(null);
-              setShown(PAGE_SIZE);
-              if (query) router.push('/companies/');
+              updateUrl({ q: undefined, page: 1 });
             }}
           >
             条件をすべて外す
@@ -217,23 +258,40 @@ export default function CompanyBrowser({ industryStats }: Props) {
 
       <div className={styles.toolbar}>
         <span className={styles.counts}>
-          表示件数: <span className={styles.countNum}>{num(visible.length)}</span> 件 / 該当{' '}
-          <span className={styles.countNum}>{num(filtered.length)}</span> 件
+          該当 <span className={styles.countNum}>{num(sorted.length)}</span> 件中{' '}
+          <span className={styles.countNum}>{num(span.from)}</span>〜
+          <span className={styles.countNum}>{num(span.to)}</span> 件
         </span>
-        <label className={styles.sortLabel}>
-          並び順
-          <select
-            className={styles.select}
-            value={sort}
-            onChange={(e) => setSort(e.target.value as SortKey)}
-          >
-            {SORTS.map((s) => (
-              <option key={s.key} value={s.key}>
-                {s.label}
-              </option>
-            ))}
-          </select>
-        </label>
+        <span className={styles.toolbarControls}>
+          <label className={styles.sortLabel}>
+            表示件数
+            <select
+              className={styles.select}
+              value={perPage}
+              onChange={(e) => updateUrl({ per: Number(e.target.value), page: 1 })}
+            >
+              {PAGE_SIZE_OPTIONS.map((n) => (
+                <option key={n} value={n}>
+                  {n} 件
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className={styles.sortLabel}>
+            並び順
+            <select
+              className={styles.select}
+              value={sort}
+              onChange={(e) => updateUrl({ sort: e.target.value as SortKey, page: 1 })}
+            >
+              {SORTS.map((s) => (
+                <option key={s.key} value={s.key}>
+                  {s.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        </span>
       </div>
 
       {failed ? (
@@ -248,16 +306,45 @@ export default function CompanyBrowser({ industryStats }: Props) {
         <>
           <CompanyTable entries={visible} statsByIndustry={medianByIndustry} />
 
-          {sorted.length > shown && (
-            <div className={styles.moreWrap}>
+          {pageCount > 1 && (
+            <nav className={styles.pagination} aria-label="ページ送り">
               <button
                 type="button"
-                className={styles.more}
-                onClick={() => setShown((s) => s + PAGE_SIZE)}
+                className={styles.pageNav}
+                onClick={() => goToPage(page - 1)}
+                disabled={page === 1}
+                aria-label="前のページ"
               >
-                さらに表示
+                ‹
               </button>
-            </div>
+              {pageItems.map((item, i) =>
+                item === 'ellipsis' ? (
+                  <span key={`e${i}`} className={styles.pageGap} aria-hidden="true">
+                    …
+                  </span>
+                ) : (
+                  <button
+                    key={item}
+                    type="button"
+                    className={`${styles.pageNum}${item === page ? ` ${styles.pageCurrent}` : ''}`}
+                    onClick={() => goToPage(item)}
+                    aria-label={`${item} ページ目`}
+                    aria-current={item === page ? 'page' : undefined}
+                  >
+                    {num(item)}
+                  </button>
+                ),
+              )}
+              <button
+                type="button"
+                className={styles.pageNav}
+                onClick={() => goToPage(page + 1)}
+                disabled={page === pageCount}
+                aria-label="次のページ"
+              >
+                ›
+              </button>
+            </nav>
           )}
         </>
       )}

@@ -6,3 +6,7 @@
 
 # AI 要約の生成にだけ必要。要約を回さないなら未インストールでも他フェーズは動く。
 anthropic>=1.0,<2
+
+# JPX の銘柄一覧（BIFF8 形式の .xls）を読むためだけに使う。
+# build_industries.py 以外からは import しない。
+xlrd>=2.0,<3

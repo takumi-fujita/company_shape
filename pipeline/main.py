@@ -6,6 +6,7 @@
 
   python3 pipeline/main.py --subsidies-only          # 補助金だけ全社分を取り直す
   python3 pipeline/main.py --summaries-only --summary-batch  # 未生成の会社の要約をまとめて生成
+  python3 pipeline/main.py --industries-only         # 業種・市場だけ付け直す（再取得しない）
 
 方針:
 - 差分実行。既に同じ filed_at のレコードがあればスキップする。
@@ -124,6 +125,32 @@ def fetch_subsidies(conn, codes):
     return ok, failed
 
 
+def apply_industries(conn, table):
+    """既存レコードに業種・市場を付け直す。有報の再取得はしない。
+
+    industries.csv は新規上場や市場変更のたびに更新される。そのために
+    3,600 社ぶんの XBRL を取り直すのは無駄なので、この経路を用意している。
+    """
+    rows = conn.execute("SELECT edinet_code, sec_code, industry_code FROM companies").fetchall()
+    changed, unknown = 0, 0
+    for r in rows:
+        industry = table.lookup(r["sec_code"])
+        if industry["code"] == industries.UNKNOWN["code"]:
+            unknown += 1
+        if industry["code"] == r["industry_code"]:
+            continue
+        conn.execute(
+            "UPDATE companies SET industry_code = ?, industry_label = ?, market = COALESCE(?, market)"
+            " WHERE edinet_code = ?",
+            (industry["code"], industry["label"], industry.get("market"), r["edinet_code"]),
+        )
+        changed += 1
+    conn.commit()
+    log.info("業種を更新しました: %d 社（変更なし %d 社 / 分類なし %d 社）",
+        changed, len(rows) - changed, unknown)
+    return changed
+
+
 def pending_summaries(conn):
     """要約がまだ無い会社のうち、入力がキャッシュにあるもの。
 
@@ -207,6 +234,18 @@ def run(args):
     if args.subsidies_only:
         updated_codes = [r["edinet_code"] for r in conn.execute("SELECT edinet_code FROM companies")]
         _run_subsidies(conn, updated_codes, args)
+        conn.close()
+        return 0
+
+    if args.industries_only:
+        apply_industries(conn, table)
+        # 業種が変われば母集団も変わるので、パーセンタイルと中央値を作り直す。
+        log.info("パーセンタイルと業種中央値を再計算します")
+        store.rebuild_derived(conn)
+        conn.commit()
+        if table.missing:
+            log.warning("業種が引けなかった銘柄: %d 件（東証以外の単独上場は industries.csv に載りません）",
+                table.missing)
         conn.close()
         return 0
 
@@ -301,6 +340,8 @@ def main(argv=None):
     p.add_argument("--force", action="store_true", help="filed_at が同じでも再取得する")
     p.add_argument("--subsidies-only", action="store_true", help="補助金だけ全社分を取り直す")
     p.add_argument("--skip-subsidies", action="store_true", help="補助金の取り込みを行わない")
+    p.add_argument("--industries-only", action="store_true",
+                   help="業種・市場だけ付け直す（有報を再取得しない）")
     p.add_argument("--summaries-only", action="store_true", help="要約がまだ無い会社の要約だけ生成する")
     p.add_argument("--skip-summaries", action="store_true", help="要約の生成を行わない")
     p.add_argument("--summary-batch", action="store_true",

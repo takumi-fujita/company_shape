@@ -40,7 +40,4 @@ export const RADAR_SUMMARY = {
   below: 45,
 } as const;
 
-/** 一覧の初期表示件数と「さらに表示」の増分。 */
-export const PAGE_SIZE = 8;
-
 export type Level = 'alert' | 'warn' | null;

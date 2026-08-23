@@ -26,7 +26,10 @@ class IndustryTable(object):
         self.missing = 0
 
     @classmethod
-    def load(cls, path=CSV_PATH):
+    def load(cls, path=None):
+        # 既定引数に CSV_PATH を直接書くと定義時に束縛され、
+        # あとから差し替えても効かない（テストで踏んだ）。
+        path = path or CSV_PATH
         if not os.path.exists(path):
             log.warning(
                 "%s がありません。全社が「%s」になります。"

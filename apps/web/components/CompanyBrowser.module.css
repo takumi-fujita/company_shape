@@ -126,12 +126,20 @@
   color: var(--ink);
 }
 
+.toolbarControls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+}
+
 .sortLabel {
   display: inline-flex;
   align-items: center;
   gap: 8px;
   font-size: 12px;
   color: var(--ink-muted);
+  white-space: nowrap;
 }
 
 .select {
@@ -314,21 +322,80 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* ---- さらに表示 / 注記 ---- */
-.moreWrap {
+/* ---- ページ送り / 注記 ---- */
+/* 最大 7 個（1 … 7 [8] 9 … 371）。34px のピル 7 個 + 隙間で 380px に収まる。 */
+.pagination {
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
+  align-items: center;
+  gap: 6px;
 }
 
-.more {
-  height: 40px;
-  padding: 0 28px;
+.pageNum,
+.pageNav {
+  min-width: 34px;
+  height: 34px;
+  padding: 0 10px;
   border-radius: var(--radius-pill);
   border: 1px solid var(--hairline);
-  background: transparent;
-  color: var(--ink);
-  font-size: 14px;
+  background: var(--panel);
+  color: var(--ink-sub);
+  font-size: 13px;
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
   cursor: pointer;
+  transition: background-color 0.12s ease, color 0.12s ease;
+}
+
+.pageNum:hover:not(.pageCurrent),
+.pageNav:hover:not(:disabled) {
+  background: var(--brand);
+  color: var(--brand-text);
+}
+
+/* 選択中はフィルタチップと同じ扱い。 */
+.pageCurrent {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+  font-weight: 500;
+  cursor: default;
+}
+
+.pageNav:disabled {
+  color: var(--ink-muted);
+  opacity: 0.4;
+  cursor: default;
+}
+
+.pageGap {
+  min-width: 20px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--ink-muted);
+  user-select: none;
+}
+
+/*
+ * 380px では 34px のピル 7 個 + 前後ボタンで 394px になり折り返す。
+ * 高さ（タップ領域）は保ったまま、横の余白と隙間だけ詰める。
+ * flex-wrap は残してあるので、想定より広い数字が来ても横スクロールにはならない。
+ */
+@media (max-width: 759px) {
+  .pagination {
+    gap: 4px;
+  }
+
+  .pageNum,
+  .pageNav {
+    min-width: 30px;
+    padding: 0 6px;
+  }
+
+  .pageGap {
+    min-width: 12px;
+  }
 }
 
 .note {

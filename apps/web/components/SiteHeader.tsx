@@ -23,8 +23,14 @@ function SearchForm() {
       role="search"
       onSubmit={(e) => {
         e.preventDefault();
+        // 表示件数と並び順は保ったまま、検索語だけ差し替えて 1 ページ目へ。
+        const sp = new URLSearchParams(params.toString());
         const q = pending.trim();
-        router.push(q ? `/companies/?q=${encodeURIComponent(q)}` : '/companies/');
+        if (q) sp.set('q', q);
+        else sp.delete('q');
+        sp.delete('page');
+        const qs = sp.toString();
+        router.push(qs ? `/companies/?${qs}` : '/companies/');
       }}
     >
       <label className="visuallyHidden" htmlFor="site-search">

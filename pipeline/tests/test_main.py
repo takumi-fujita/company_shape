@@ -25,6 +25,7 @@ class Args(object):
         self.limit = kw.get("limit", 0)
         self.force = kw.get("force", False)
         self.subsidies_only = kw.get("subsidies_only", False)
+        self.industries_only = kw.get("industries_only", False)
         self.skip_subsidies = kw.get("skip_subsidies", True)
         self.summaries_only = kw.get("summaries_only", False)
         self.skip_summaries = kw.get("skip_summaries", True)
@@ -179,6 +180,7 @@ class TestSubsidies(MainCase):
     def args(self, **kw):
         a = Args(self.db, **kw)
         a.subsidies_only = kw.get("subsidies_only", False)
+        a.industries_only = kw.get("industries_only", False)
         a.skip_subsidies = kw.get("skip_subsidies", False)
         return a
 
@@ -289,6 +291,7 @@ class TestSummaries(MainCase):
 
     def args(self, **kw):
         a = Args(self.db, **kw)
+        a.industries_only = kw.get("industries_only", False)
         a.summaries_only = kw.get("summaries_only", False)
         a.skip_summaries = kw.get("skip_summaries", False)
         a.summary_batch = kw.get("summary_batch", False)
@@ -358,3 +361,72 @@ class TestSummaries(MainCase):
         companies, _, _ = self.rows()
         self.assertEqual(len(companies), 1)
         self.assertIsNone(self.company()["summary"])
+
+
+class TestIndustriesOnly(MainCase):
+    """業種の付け直し。有報を再取得しないこと。"""
+
+    def setUp(self):
+        super(TestIndustriesOnly, self).setUp()
+        import os
+
+        # 既定は「CSV が無い」状態。基底クラスのテストもこのクラスで走るので、
+        # ここで CSV を用意してしまうと前提が食い違う。必要なテストが自分で書く。
+        self.csv_path = os.path.join(self.dir, "industries.csv")
+        industries.CSV_PATH = os.path.join(self.dir, "missing.csv")
+
+    def write_csv(self, sec_code="1234"):
+        import csv
+
+        with open(self.csv_path, "w", encoding="utf-8", newline="") as f:
+            w = csv.DictWriter(f, fieldnames=["sec_code", "industry_code", "industry_label", "market"])
+            w.writeheader()
+            w.writerow({"sec_code": sec_code, "industry_code": "5250",
+                        "industry_label": "情報・通信業", "market": "プライム"})
+        industries.CSV_PATH = self.csv_path
+
+    def args(self, **kw):
+        a = Args(self.db, **kw)
+        a.industries_only = kw.get("industries_only", False)
+        return a
+
+    def company(self):
+        conn = store.connect(self.db)
+        row = conn.execute(
+            "SELECT industry_code, industry_label, market FROM companies WHERE edinet_code='E01234'"
+        ).fetchone()
+        conn.close()
+        return dict(row)
+
+    def test_applies_industry_without_refetching(self):
+        # csv が無い状態で取り込む
+        etl.run(self.args())
+        self.assertEqual(self.company()["industry_code"], "unknown")
+        downloads_before = len(self.downloads)
+
+        # csv を用意して付け直す
+        self.write_csv()
+        etl.run(self.args(industries_only=True))
+        c = self.company()
+        self.assertEqual(c["industry_code"], "5250")
+        self.assertEqual(c["industry_label"], "情報・通信業")
+        self.assertEqual(c["market"], "プライム")
+        self.assertEqual(len(self.downloads), downloads_before, "有報を再取得している")
+
+    def test_rebuilds_percentiles(self):
+        etl.run(self.args())
+        self.write_csv()
+        etl.run(self.args(industries_only=True))
+        conn = store.connect(self.db)
+        n = conn.execute("SELECT COUNT(*) FROM percentiles").fetchone()[0]
+        stats = conn.execute("SELECT industry_code FROM industry_stats").fetchall()
+        conn.close()
+        self.assertEqual(n, 1)
+        self.assertEqual([r["industry_code"] for r in stats], ["5250"])
+
+    def test_unlisted_company_stays_unknown(self):
+        """東証以外の単独上場は industries.csv に載らない。落とさず unknown のまま。"""
+        etl.run(self.args())
+        self.write_csv(sec_code="9999")
+        self.assertEqual(etl.run(self.args(industries_only=True)), 0)
+        self.assertEqual(self.company()["industry_code"], "unknown")
