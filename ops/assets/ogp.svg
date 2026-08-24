@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <!--
+    OGP 画像の版下。ops/build-ogp.sh で PNG に変換して apps/web/public/ogp.png に置く。
+    サイト本体は Web フォントを使わないが、これはビルド時に 1 枚焼くだけの画像なので
+    コンテナ内の Noto Sans JP で描画する。色はデザイントークンの値。
+  -->
+  <rect width="1200" height="630" fill="#F1EFE8"/>
+  <rect x="0" y="0" width="1200" height="14" fill="#1D9E75"/>
+
+  <!-- データくん -->
+  <g transform="translate(150 195) scale(5.4)">
+    <rect x="13" y="4" width="4.5" height="8" rx="2.2" fill="#F0997B"/>
+    <rect x="20.5" y="0" width="4.5" height="12" rx="2.2" fill="#EF9F27"/>
+    <rect x="28" y="5" width="4.5" height="7" rx="2.2" fill="#7F77DD"/>
+    <circle cx="23" cy="27" r="16" fill="#1D9E75"/>
+    <circle cx="17" cy="24" r="3.4" fill="#FFFFFF"/>
+    <circle cx="29" cy="24" r="3.4" fill="#FFFFFF"/>
+    <circle cx="17" cy="24.6" r="1.6" fill="#0F3D30"/>
+    <circle cx="29" cy="24.6" r="1.6" fill="#0F3D30"/>
+    <path d="M18 32 q5 4 10 0" stroke="#0F3D30" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+  </g>
+
+  <text x="480" y="272" font-family="Noto Sans JP" font-weight="500" font-size="86" fill="#2C2C2A">会社のかたち</text>
+  <text x="484" y="342" font-family="Noto Sans JP" font-weight="400" font-size="34" fill="#5F5E5A">決算書を、はたらく人の言葉に。</text>
+  <text x="484" y="416" font-family="Noto Sans JP" font-weight="400" font-size="26" fill="#888780">上場企業の平均年収・勤続年数・業績を</text>
+  <text x="484" y="456" font-family="Noto Sans JP" font-weight="400" font-size="26" fill="#888780">有価証券報告書からそのまま並べています</text>
+
+  <rect x="484" y="506" width="312" height="54" rx="27" fill="#FAECE7"/>
+  <text x="640" y="541" font-family="Noto Sans JP" font-weight="400" font-size="24" fill="#993C1D" text-anchor="middle">出典 EDINET / gBizINFO</text>
+</svg>

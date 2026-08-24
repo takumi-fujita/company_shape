@@ -105,3 +105,32 @@
 .pending {
   color: var(--ink-muted);
 }
+
+/* ランキングページの内訳。指標ごとに中身が変わる。 */
+.summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 0;
+}
+
+.summaryItem {
+  background: var(--card);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-card);
+  padding: 12px 16px;
+  min-width: 160px;
+}
+
+.summaryLabel {
+  font-size: 12px;
+  color: var(--ink-sub);
+}
+
+.summaryValue {
+  margin: 2px 0 0;
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}

@@ -3,7 +3,15 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import CompanyTable from '@/components/CompanyTable';
 import { buildSearchIndex, getIndustryStat, getIndustryStats } from '@/lib/db';
-import { METRIC_KEYS, METRICS, parseRankingSlug, rankingSlug, sortByMetric } from '@/lib/ranking';
+import {
+  METRIC_KEYS,
+  METRICS,
+  MIN_RANKED,
+  parseRankingSlug,
+  rankingSlug,
+  sortByMetric,
+  summarize,
+} from '@/lib/ranking';
 import { count } from '@/lib/format';
 import styles from '../../companies/hub.module.css';
 
@@ -25,10 +33,17 @@ export async function generateMetadata({
   const stat = parsed && getIndustryStat(parsed.industryCode);
   if (!parsed || !stat) return {};
   const metric = METRICS[parsed.metric];
+  const entries = buildSearchIndex().filter((e) => e.industryCode === parsed.industryCode);
+  const sum = summarize(entries, parsed.metric);
   return {
     title: `${stat.industryLabel}の${metric.heading}｜${metric.label}で並べた上場企業一覧`,
-    description: `${stat.industryLabel}の上場企業を${metric.label}で並べた一覧です。数値は有価証券報告書からの機械抽出で、評価・解釈は含みません。`,
+    description:
+      `${stat.industryLabel}の上場企業 ${sum.total} 社を${metric.label}で並べた一覧です。` +
+      `${metric.label}の中央値は ${sum.median}。` +
+      '数値は有価証券報告書からの機械抽出で、評価・解釈は含みません。',
     alternates: { canonical: `/ranking/${slug}/` },
+    // 数社しかない業種は「ランキング」として成立しないので検索対象から外す。
+    robots: sum.total < MIN_RANKED ? { index: false, follow: true } : undefined,
   };
 }
 
@@ -41,10 +56,9 @@ export default async function RankingPage({ params }: { params: Promise<{ slug: 
 
   const metric = METRICS[parsed.metric];
   const stats = new Map(getIndustryStats().map((s) => [s.industryCode, s]));
-  const entries = sortByMetric(
-    buildSearchIndex().filter((e) => e.industryCode === parsed.industryCode),
-    parsed.metric,
-  );
+  const all = buildSearchIndex().filter((e) => e.industryCode === parsed.industryCode);
+  const entries = sortByMetric(all, parsed.metric);
+  const sum = summarize(all, parsed.metric);
 
   return (
     <main className={styles.main}>
@@ -59,8 +73,38 @@ export default async function RankingPage({ params }: { params: Promise<{ slug: 
         {stat.industryLabel}の{metric.heading}
       </h1>
       <p className={styles.lead}>
-        {stat.industryLabel}の上場企業 {count(entries.length)} を{metric.label}
-        で並べています。並べ替えの軸を示しているだけで、順位に評価の意味はありません。
+        {stat.industryLabel}の上場企業 {count(sum.total)} を{metric.label}で並べています。
+        並べ替えの軸を示しているだけで、順位に評価の意味はありません。
+      </p>
+
+      {/* 指標ごとに変わる内訳。同じ業種の各ページが並び順しか違わない状態を避ける。 */}
+      <dl className={styles.summary}>
+        <div className={styles.summaryItem}>
+          <dt className={styles.summaryLabel}>{metric.label}の中央値</dt>
+          <dd className={styles.summaryValue}>{sum.median}</dd>
+        </div>
+        <div className={styles.summaryItem}>
+          <dt className={styles.summaryLabel}>記載のあった会社</dt>
+          <dd className={styles.summaryValue}>
+            {count(sum.counted)} / {count(sum.total)}
+          </dd>
+        </div>
+      </dl>
+
+      {sum.top.length > 0 && (
+        <p className={styles.lead}>
+          {metric.label}が大きい順に{' '}
+          {sum.top.map((t, i) => (
+            <span key={t.name}>
+              {i > 0 && '、'}
+              {t.name}（{t.value}）
+            </span>
+          ))}
+          。{metric.source}
+        </p>
+      )}
+
+      <p className={styles.note}>
         {metric.label}が有価証券報告書から取得できなかった会社は末尾に置いています。
       </p>
 

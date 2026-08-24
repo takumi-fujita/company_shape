@@ -11,7 +11,7 @@
     "prebuild": "node scripts/build-search-index.mjs",
     "predev": "node scripts/build-search-index.mjs",
     "postbuild": "node scripts/build-sitemap-index.mjs",
-    "check": "node scripts/check-banned-words.mjs && vitest run && next build && node scripts/check-bundle-budget.mjs",
+    "check": "node scripts/check-banned-words.mjs && vitest run && npm run build && node scripts/check-output.mjs && node scripts/check-bundle-budget.mjs",
     "lint:words": "node scripts/check-banned-words.mjs",
     "check:budget": "node scripts/check-bundle-budget.mjs"
   },

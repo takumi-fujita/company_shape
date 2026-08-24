@@ -6,10 +6,13 @@
 取れないものは推定で埋めず None にする。1 社でも欠損で落ちないこと。
 """
 import datetime
+import logging
 
 import config
 from parse import labels as labelmod
 from parse.xbrl import strip_html, to_int, to_number
+
+log = logging.getLogger(__name__)
 
 
 def _fiscal_label(date_str):
@@ -41,6 +44,23 @@ def period_targets(fiscal_year_end, n=config.PERIODS):
         end = _shift_years(fiscal_year_end, back)
         out.append((_fiscal_label(end), end))
     return out
+
+
+def in_sane_range(field, value):
+    """妥当性の範囲に収まっているか。範囲外なら None を返す。
+
+    桁がずれた値をそのまま載せると、実在企業の平均年収を数十億円と表示することになる。
+    推測で直すより、欠損にして「—」を出すほうが安全。
+    """
+    if value is None:
+        return None
+    lo, hi = config.SANE_RANGES.get(field, (None, None))
+    if lo is None:
+        return value
+    if lo <= value <= hi:
+        return value
+    log.warning("%s の値 %s が妥当な範囲 %s〜%s の外なので欠損として扱います", field, value, lo, hi)
+    return None
 
 
 def _money_to_millions(value):
@@ -171,7 +191,7 @@ def extract(instance, labels=None, filed_at=None):
                 "fiscal_end": end,
                 "revenue": _money_to_millions(revenue),
                 "operating_profit": _money_to_millions(op),
-                "employees": to_int(emp),
+                "employees": in_sane_range("employees", to_int(emp)),
                 # 平均年収は 1 通に当期分しか載らない。最新期だけ後で埋める。
                 "avg_salary": None,
                 "segments": [],
@@ -190,7 +210,7 @@ def extract(instance, labels=None, filed_at=None):
         )
 
     salary_raw, _, _ = instance.find(config.EMPLOYEES["avg_salary"])
-    avg_salary = _yen_to_thousands(salary_raw)
+    avg_salary = in_sane_range("avg_salary", _yen_to_thousands(salary_raw))
 
     tenure_years, _, _ = instance.find(config.EMPLOYEES["avg_tenure_years"])
     tenure_months, _, _ = instance.find(config.EMPLOYEES["avg_tenure_months"])
@@ -199,10 +219,11 @@ def extract(instance, labels=None, filed_at=None):
         avg_tenure = round(avg_tenure + to_number(tenure_months) / 12.0, 1)
     elif avg_tenure is not None:
         avg_tenure = round(avg_tenure, 1)
+    avg_tenure = in_sane_range("avg_tenure", avg_tenure)
 
     periods[-1]["avg_salary"] = avg_salary
     if periods[-1]["employees"] is None:
-        periods[-1]["employees"] = to_int(emp_now)
+        periods[-1]["employees"] = in_sane_range("employees", to_int(emp_now))
 
     # --- 現預金（当期末） ---------------------------------------------------
     cash_raw, _ = _any_basis(instance, config.STATEMENTS["cash"], current_end, consolidated, "instant")

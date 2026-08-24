@@ -144,3 +144,36 @@ class TestText(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestSanityRange(unittest.TestCase):
+    """提出会社側の XBRL に桁の誤りがある。推測で直さず欠損にする。"""
+
+    def test_absurdly_high_salary_becomes_missing(self):
+        """実在例: 8,759,000,000 円（正しくは 1/1000 と思われる）。"""
+        r = load(avg_salary_yen=8_759_000_000)
+        self.assertIsNone(r["avg_salary"], "桁がずれた年収がそのまま入っている")
+        self.assertIsNone(r["periods"][-1]["avg_salary"])
+
+    def test_absurdly_low_salary_becomes_missing(self):
+        """実在例: 4,950 円（千円単位の値をそのまま入れたと思われる）。"""
+        self.assertIsNone(load(avg_salary_yen=4950)["avg_salary"])
+
+    def test_normal_salary_passes(self):
+        # 境界も落とさない
+        for yen in (1_000_000, 6_002_892, 50_000_000):
+            self.assertIsNotNone(load(avg_salary_yen=yen)["avg_salary"], "%d 円が落ちている" % yen)
+
+    def test_zero_tenure_becomes_missing(self):
+        self.assertIsNone(load(tenure_years="0", tenure_months="0")["avg_tenure"])
+
+    def test_normal_tenure_passes(self):
+        self.assertEqual(load(tenure_years="13", tenure_months="2")["avg_tenure"], 13.2)
+
+    def test_ranges_are_declared_for_the_fields_we_publish(self):
+        import config
+
+        for field in ("avg_salary", "avg_tenure", "employees"):
+            self.assertIn(field, config.SANE_RANGES)
+            lo, hi = config.SANE_RANGES[field]
+            self.assertLess(lo, hi)
