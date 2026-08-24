@@ -595,9 +595,34 @@
   text-decoration: none;
 }
 
+.peerHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+/* リンクだと分かるように、色はリンク色にして矢印を添える。
+   指標カードと同じ無彩色のままだと押せることが伝わらない。 */
 .peerName {
   font-size: 14px;
-  color: var(--ink);
+  color: var(--accent-hover);
+}
+
+.peerArrow {
+  flex: 0 0 auto;
+  font-size: 13px;
+  color: var(--ink-muted);
+  transition: color 0.12s ease;
+}
+
+.peer:hover .peerName {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+.peer:hover .peerArrow {
+  color: var(--accent);
 }
 
 .peerStats {

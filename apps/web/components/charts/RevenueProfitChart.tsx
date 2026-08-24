@@ -6,7 +6,8 @@ import type { FiscalPeriod } from '@/lib/types';
 export default function RevenueProfitChart({ periods }: { periods: FiscalPeriod[] }) {
   const c = buildRevenueProfitChart(periods);
   return (
-    <ChartFrame viewBox={c.viewBox} ariaLabel="売上と営業利益の5期推移" labels={c.labels}>
+    <ChartFrame viewBox={c.viewBox} ariaLabel="売上と営業利益の5期推移" labels={c.labels}
+      hotspots={c.hotspots}>
       {c.grid.map((g, i) => (
         <line key={i} x1={g.x1} x2={g.x2} y1={g.y} y2={g.y} stroke="var(--hairline)" strokeWidth="1" />
       ))}

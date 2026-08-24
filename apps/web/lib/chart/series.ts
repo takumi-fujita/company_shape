@@ -4,7 +4,8 @@
  * - 欠損期は棒を描かず、折れ線もそこで切る（推定で埋めない）。
  * - 営業利益は赤字なら負になる。軸は 0 を必ず含み、棒は 0 を基点に上下へ伸ばす。
  */
-import { num } from '../format';
+import { EM_DASH, num, unit } from '../format';
+import { clampBand, pct, type Hotspot } from './hotspot';
 import { GRID_TICKS, niceScale, topBarPath, type Scale } from './nice';
 import { labeler, type ChartLabel } from './labels';
 import type { FiscalPeriod } from '../types';
@@ -76,6 +77,7 @@ export interface RevenueProfitChart {
   linePath: string;
   points: { x: number; y: number }[];
   labels: ChartLabel[];
+  hotspots: Hotspot[];
 }
 
 export function buildRevenueProfitChart(fy: FiscalPeriod[]): RevenueProfitChart {
@@ -143,6 +145,28 @@ export function buildRevenueProfitChart(fy: FiscalPeriod[]): RevenueProfitChart 
     );
   });
 
+  const hotspots: Hotspot[] = fy.map((f, i) => {
+    const [from, to] = clampBand(L1 + step * i, L1 + step * (i + 1), W1);
+    const tops = [barGeom[i].top, pts[i]?.y].filter((v): v is number => v != null);
+    return {
+      left: pct(from, W1),
+      top: pct(T1, H1),
+      width: pct(to - from, W1),
+      height: pct(ph, H1),
+      anchorLeft: pct(barGeom[i].cx, W1),
+      anchorTop: pct(tops.length ? Math.min(...tops) : T1 + ph / 2, H1),
+      title: `${f.label}期`,
+      rows: [
+        { name: '売上高', value: f.revenue == null ? EM_DASH : unit(f.revenue, '百万円'), color: BAR_TONES[i] },
+        {
+          name: '営業利益',
+          value: f.operatingProfit == null ? EM_DASH : unit(f.operatingProfit, '百万円'),
+          color: 'var(--chart-line)',
+        },
+      ],
+    };
+  });
+
   return {
     viewBox: `0 0 ${W1} ${H1}`,
     grid,
@@ -152,6 +176,7 @@ export function buildRevenueProfitChart(fy: FiscalPeriod[]): RevenueProfitChart 
     linePath: polyline(pts),
     points: pts.filter((p): p is { x: number; y: number } => p != null),
     labels,
+    hotspots,
   };
 }
 
@@ -173,6 +198,7 @@ export interface HeadcountSalaryChart {
   employeeDots: { x: number; y: number }[];
   salaryDots: { x: number; y: number }[];
   labels: ChartLabel[];
+  hotspots: Hotspot[];
 }
 
 export function buildHeadcountSalaryChart(fy: FiscalPeriod[]): HeadcountSalaryChart {
@@ -199,9 +225,28 @@ export function buildHeadcountSalaryChart(fy: FiscalPeriod[]): HeadcountSalaryCh
   });
   fy.forEach((f, i) => labels.push(lab(x(i), H2 - 10, f.label, 'var(--ink-muted)', 11)));
 
+  const hotspots: Hotspot[] = fy.map((f, i) => {
+    const [from, to] = clampBand(x(i) - step / 2, x(i) + step / 2, W2);
+    const tops = [ePts[i]?.y, sPts[i]?.y].filter((v): v is number => v != null);
+    return {
+      left: pct(from, W2),
+      top: pct(T2, H2),
+      width: pct(to - from, W2),
+      height: pct(ph, H2),
+      anchorLeft: pct(x(i), W2),
+      anchorTop: pct(tops.length ? Math.min(...tops) : T2 + ph / 2, H2),
+      title: `${f.label}期`,
+      rows: [
+        { name: '従業員数', value: f.employees == null ? EM_DASH : unit(f.employees, '名'), color: 'var(--chart-teal-3)' },
+        { name: '平均年収', value: f.avgSalary == null ? EM_DASH : unit(f.avgSalary, '千円'), color: 'var(--chart-line)' },
+      ],
+    };
+  });
+
   return {
     viewBox: `0 0 ${W2} ${H2}`,
     grid,
+    hotspots,
     employeePath: polyline(ePts),
     // 年収が全期欠損なら破線は描かない。
     salaryPath: sPts.every((p) => p == null) ? '' : polyline(sPts),
@@ -233,6 +278,7 @@ export interface SegmentChart {
   grid: GridLine[];
   blocks: { x: number; y: number; w: number; h: number; color: string }[];
   labels: ChartLabel[];
+  hotspots: Hotspot[];
 }
 
 export function buildSegmentChart(fy: FiscalPeriod[]): SegmentChart {
@@ -287,5 +333,30 @@ export function buildSegmentChart(fy: FiscalPeriod[]): SegmentChart {
     labels.push(lab(cx, H3 - 10, f.label, 'var(--ink-muted)', 11));
   });
 
-  return { viewBox: `0 0 ${W3} ${H3}`, grid, blocks, labels };
+  const hotspots: Hotspot[] = fy.map((f, i) => {
+    const cx = L3 + step * i + step / 2;
+    const [from, to] = clampBand(L3 + step * i, L3 + step * (i + 1), W3);
+    const top = stacks[i].positive > 0 ? y(stacks[i].positive) : zero;
+    return {
+      left: pct(from, W3),
+      top: pct(T3, H3),
+      width: pct(to - from, W3),
+      height: pct(ph, H3),
+      anchorLeft: pct(cx, W3),
+      anchorTop: pct(top, H3),
+      title: `${f.label}期`,
+      rows: f.segments.length
+        ? [
+            ...f.segments.map((seg, k) => ({
+              name: seg.name,
+              value: unit(seg.value, '百万円'),
+              color: SEGMENT_COLORS[k % SEGMENT_COLORS.length],
+            })),
+            { name: '合計', value: unit(stacks[i].total, '百万円') },
+          ]
+        : [{ name: 'セグメントの内訳', value: EM_DASH }],
+    };
+  });
+
+  return { viewBox: `0 0 ${W3} ${H3}`, grid, blocks, labels, hotspots };
 }

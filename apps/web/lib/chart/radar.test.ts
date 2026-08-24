@@ -38,3 +38,26 @@ test('全軸が中間帯なら専用の文言を出す', () => {
     '5 つの角度すべてが業種のまんなか付近です。',
   );
 });
+
+test('レーダーのホバーは 5 軸ぶんで、順位と業種のまんなかを出す', () => {
+  const r = buildRadar(P);
+  assert.equal(r.hotspots.length, 5);
+  assert.deepEqual(r.hotspots.map((h) => h.title), ['給与', '定着', '成長', '規模', '財務']);
+  assert.deepEqual(
+    r.hotspots[0].rows.map((x) => [x.name, x.value]),
+    [
+      ['業種内の順位', '58 / 100'],
+      ['業種のまんなか', '50 / 100'],
+    ],
+  );
+});
+
+test('レーダーのホバー領域は viewBox に収まる', () => {
+  const r = buildRadar({ salary: 0, tenure: 0, growth: 0, scale: 0, finance: 0 });
+  for (const h of r.hotspots) {
+    const num = (s: string) => Number(s.replace('%', ''));
+    const EPS = 0.02;
+    assert.ok(num(h.left) >= -EPS && num(h.left) + num(h.width) <= 100 + EPS, `横がはみ出す: ${h.left}`);
+    assert.ok(num(h.top) >= -EPS && num(h.top) + num(h.height) <= 100 + EPS, `縦がはみ出す: ${h.top}`);
+  }
+});

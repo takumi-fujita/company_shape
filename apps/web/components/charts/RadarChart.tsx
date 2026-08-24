@@ -15,6 +15,7 @@ export default function RadarChart({ percentiles }: { percentiles: Percentiles }
         viewBox={r.viewBox}
         ariaLabel="業種内パーセンタイルのレーダーチャート"
         labels={r.labels}
+      hotspots={r.hotspots}
       >
         <polygon points={r.outer} fill="none" stroke="var(--hairline)" strokeWidth="1" />
         {r.spokes.map((s, i) => (

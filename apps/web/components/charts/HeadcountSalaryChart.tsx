@@ -6,7 +6,8 @@ import type { FiscalPeriod } from '@/lib/types';
 export default function HeadcountSalaryChart({ periods }: { periods: FiscalPeriod[] }) {
   const c = buildHeadcountSalaryChart(periods);
   return (
-    <ChartFrame viewBox={c.viewBox} ariaLabel="従業員数と平均年収の推移" labels={c.labels}>
+    <ChartFrame viewBox={c.viewBox} ariaLabel="従業員数と平均年収の推移" labels={c.labels}
+      hotspots={c.hotspots}>
       {c.grid.map((g, i) => (
         <line key={i} x1={g.x1} x2={g.x2} y1={g.y} y2={g.y} stroke="var(--hairline)" strokeWidth="1" />
       ))}

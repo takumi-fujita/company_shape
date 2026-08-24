@@ -28,3 +28,12 @@ function resolveSiteUrl(): string {
 }
 
 export const SITE_URL = resolveSiteUrl();
+
+/**
+ * 訂正・削除依頼を受け付ける Google フォームの URL。
+ *
+ * 未設定でもページ自体は出す。掲載内容に関する窓口はサイトの体裁として必要で、
+ * フォームが用意できていないことを理由に窓口ごと消すべきではないため。
+ * その場合はボタンを出さず、準備中である旨だけを表示する。
+ */
+export const REMOVAL_FORM_URL = process.env.NEXT_PUBLIC_REMOVAL_FORM_URL?.trim() ?? '';

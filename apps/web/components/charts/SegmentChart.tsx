@@ -6,7 +6,8 @@ import type { FiscalPeriod } from '@/lib/types';
 export default function SegmentChart({ periods }: { periods: FiscalPeriod[] }) {
   const c = buildSegmentChart(periods);
   return (
-    <ChartFrame viewBox={c.viewBox} ariaLabel="セグメント別営業利益" labels={c.labels}>
+    <ChartFrame viewBox={c.viewBox} ariaLabel="セグメント別営業利益" labels={c.labels}
+      hotspots={c.hotspots}>
       {c.grid.map((g, i) => (
         <line key={i} x1={g.x1} x2={g.x2} y1={g.y} y2={g.y} stroke="var(--hairline)" strokeWidth="1" />
       ))}

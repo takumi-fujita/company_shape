@@ -5,6 +5,7 @@
  */
 import { RADAR_SUMMARY } from '../thresholds';
 import type { Percentiles } from '../types';
+import { clampBand, pct, type Hotspot } from './hotspot';
 import { labeler, type ChartLabel } from './labels';
 
 export const RADAR_W = 260;
@@ -58,7 +59,11 @@ export interface RadarGeometry {
   spokes: { x1: number; y1: number; x2: number; y2: number }[];
   dots: Point[];
   labels: ChartLabel[];
+  hotspots: Hotspot[];
 }
+
+/** 当たり判定の一辺（viewBox 単位）。頂点が中心付近でも重なりすぎない大きさ。 */
+const HOTSPOT_SIZE = 40;
 
 export function buildRadar(p: Percentiles): RadarGeometry {
   const values = RADAR_AXES.map((a) => p[a.key]);
@@ -76,6 +81,26 @@ export function buildRadar(p: Percentiles): RadarGeometry {
     labels: RADAR_AXES.map((a, i) => {
       const q = point(i, LABEL_RATIO);
       return lab(q.x, q.y, a.label, 'var(--ink-sub)', 11);
+    }),
+    // 当たり判定は軸ラベルの位置に置く。頂点そのものだと、値が小さい会社で
+    // 5 つが中心に集まって重なってしまう。
+    hotspots: RADAR_AXES.map((a, i): Hotspot => {
+      const anchor = point(i, LABEL_RATIO);
+      const [x0, x1] = clampBand(anchor.x - HOTSPOT_SIZE / 2, anchor.x + HOTSPOT_SIZE / 2, RADAR_W);
+      const [y0, y1] = clampBand(anchor.y - HOTSPOT_SIZE / 2, anchor.y + HOTSPOT_SIZE / 2, RADAR_H);
+      return {
+        left: pct(x0, RADAR_W),
+        top: pct(y0, RADAR_H),
+        width: pct(x1 - x0, RADAR_W),
+        height: pct(y1 - y0, RADAR_H),
+        anchorLeft: pct(anchor.x, RADAR_W),
+        anchorTop: pct(y0, RADAR_H),
+        title: a.label,
+        rows: [
+          { name: '業種内の順位', value: `${values[i]} / 100`, color: 'var(--accent)' },
+          { name: '業種のまんなか', value: '50 / 100', color: 'var(--chart-mid)' },
+        ],
+      };
     }),
   };
 }

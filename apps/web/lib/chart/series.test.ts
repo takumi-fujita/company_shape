@@ -134,3 +134,71 @@ test('すべて 0 の系列でも NaN を出さない', () => {
   assert.ok(!c.linePath.includes('NaN'));
   assert.ok(c.points.every((p) => Number.isFinite(p.y)));
 });
+
+/** "12.34%" → 12.34 */
+const p = (s: string) => Number(s.replace('%', ''));
+
+test('複合グラフのホバー領域は 5 期ぶんで、重ならず viewBox に収まる', () => {
+  const c = buildRevenueProfitChart(periods());
+  assert.equal(c.hotspots.length, 5);
+  // % は小数 2 桁に丸めてあるので、比較にもその分の許容を持たせる。
+  const EPS = 0.02;
+  let prevRight = -1;
+  for (const h of c.hotspots) {
+    const left = p(h.left);
+    const right = left + p(h.width);
+    assert.ok(left >= -EPS && right <= 100 + EPS, `帯が範囲外: ${h.left} + ${h.width}`);
+    assert.ok(left - prevRight >= -EPS, `帯が重なっている: ${left} < ${prevRight}`);
+    prevRight = right;
+    assert.ok(
+      p(h.anchorLeft) >= left - EPS && p(h.anchorLeft) <= right + EPS,
+      '基準点が帯の外',
+    );
+  }
+});
+
+test('ホバーには整形済みの値が入る（クライアントで整形しない）', () => {
+  const c = buildRevenueProfitChart(periods());
+  const last = c.hotspots[4];
+  assert.equal(last.title, '26/3期');
+  assert.deepEqual(
+    last.rows.map((r) => [r.name, r.value]),
+    [
+      ['売上高', '12,000 百万円'],
+      ['営業利益', '690 百万円'],
+    ],
+  );
+});
+
+test('欠損期のホバーは「—」を出す', () => {
+  const c = buildRevenueProfitChart(periods([{ revenue: null, operatingProfit: null, segments: [] }]));
+  assert.deepEqual(
+    c.hotspots[0].rows.map((r) => r.value),
+    ['—', '—'],
+  );
+});
+
+test('2 軸折れ線のホバーは従業員数と平均年収を出す', () => {
+  const c = buildHeadcountSalaryChart(periods());
+  assert.equal(c.hotspots.length, 5);
+  assert.deepEqual(
+    c.hotspots[0].rows.map((r) => [r.name, r.value]),
+    [
+      ['従業員数', '280 名'],
+      ['平均年収', '6,200 千円'],
+    ],
+  );
+});
+
+test('積み上げ棒のホバーは内訳と合計を出す', () => {
+  const c = buildSegmentChart(periods());
+  const rows = c.hotspots[0].rows;
+  assert.deepEqual(rows.map((r) => r.name), ['主力事業', '関連サービス', '保守・その他', '合計']);
+  assert.equal(rows[3].value, '700 百万円');
+  assert.equal(rows[3].color, undefined, '合計に系列色が付いている');
+});
+
+test('セグメントが無い期のホバーは「—」を出す', () => {
+  const c = buildSegmentChart(periods([0, 1, 2, 3, 4].map(() => ({ segments: [] }))));
+  assert.deepEqual(c.hotspots[0].rows.map((r) => r.value), ['—']);
+});

@@ -467,7 +467,8 @@ export default async function CompanyPage({
         </div>
       </section>
 
-      {/* 13. 広告枠（ファーストビュー外） */}
+      {/* 13. 広告枠（ファーストビュー外）
+          広告がついてから出す。それまでは枠だけ見せない。
       <aside className={styles.ad}>
         <span className={styles.adBadge}>広告</span>
         <span className={styles.adText}>
@@ -477,6 +478,7 @@ export default async function CompanyPage({
           詳細
         </a>
       </aside>
+      */}
 
       {/* 14. 同じ業種の会社 */}
       {peers.length > 0 && (
@@ -485,7 +487,13 @@ export default async function CompanyPage({
           <div className={styles.colsPeer}>
             {peers.map((p) => (
               <Link key={p.edinetCode} className={styles.peer} href={`/company/${p.edinetCode}/`}>
-                <span className={styles.peerName}>{p.name}</span>
+                <span className={styles.peerHead}>
+                  <span className={styles.peerName}>{p.name}</span>
+                  {/* 押せることが分かる手がかり。指標カードと同じ見た目だと区別がつかない。 */}
+                  <span className={styles.peerArrow} aria-hidden="true">
+                    ›
+                  </span>
+                </span>
                 <span className={styles.peerStats}>
                   平均年収 {fmtSal(p.avgSalary)} ／ 勤続 {fmtTen(p.avgTenure)}
                 </span>

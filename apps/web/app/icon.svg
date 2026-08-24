@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <!--
+    ファビコン。マスコット「データくん」。
+    16px でも読めるよう、本体を大きめに取り、髪の 3 本を太くしている。
+    CSS 変数は使えないので、デザイントークンの値を直接書いている。
+  -->
+  <rect x="7.6" y="2.4" width="4" height="7.2" rx="2" fill="#f0997b"/>
+  <rect x="14" y="0.4" width="4" height="9.2" rx="2" fill="#ef9f27"/>
+  <rect x="20.4" y="3.2" width="4" height="6.4" rx="2" fill="#7f77dd"/>
+  <circle cx="16" cy="20.4" r="11.2" fill="#1d9e75"/>
+  <circle cx="11.8" cy="18.3" r="2.6" fill="#ffffff"/>
+  <circle cx="20.2" cy="18.3" r="2.6" fill="#ffffff"/>
+  <circle cx="11.8" cy="18.7" r="1.25" fill="#0f3d30"/>
+  <circle cx="20.2" cy="18.7" r="1.25" fill="#0f3d30"/>
+  <path d="M12.4 24.2 q3.6 2.9 7.2 0" stroke="#0f3d30" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+</svg>

@@ -81,3 +81,27 @@
   flex-direction: column;
   gap: 10px;
 }
+
+/* 訂正・削除の依頼フォームへのボタン。CTA なので accent 地。 */
+.formButton {
+  display: inline-flex;
+  align-items: center;
+  height: 40px;
+  padding: 0 20px;
+  border-radius: var(--radius-pill);
+  background: var(--accent);
+  color: var(--on-accent);
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.formButton:hover {
+  background: var(--accent-hover);
+  color: var(--on-accent);
+  text-decoration: none;
+}
+
+.pending {
+  color: var(--ink-muted);
+}

@@ -65,6 +65,14 @@
   opacity: 0.8;
 }
 
+/* × のときはクリック領域として扱う。 */
+.marker[role='button'] {
+  cursor: pointer;
+  padding: 0 2px;
+  margin: 0 -2px;
+  opacity: 1;
+}
+
 .popover {
   position: absolute;
   top: 40px;
@@ -79,9 +87,41 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
+  /* 業種 33 件・平均年収 18 件があるので高さを固定してスクロールさせる。
+     8 項目ぶん（項目 34px + 隙間 2px）＋ padding。 */
+  max-height: 294px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+
+  /* macOS は既定でスクロールバーを重ねて隠すため、スクロールできることが伝わらない。
+     常に出す。scrollbar-gutter で幅を先に確保し、開いた瞬間に文字がずれないようにする。 */
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: var(--ink-muted) var(--hairline);
+}
+
+/* WebKit は ::-webkit-scrollbar を定義すると重ね表示をやめ、常時表示になる。 */
+.popover::-webkit-scrollbar {
+  width: 8px;
+}
+
+.popover::-webkit-scrollbar-track {
+  background: var(--hairline);
+  border-radius: var(--radius-pill);
+}
+
+.popover::-webkit-scrollbar-thumb {
+  background: var(--ink-muted);
+  border-radius: var(--radius-pill);
+  /* つまみを細く見せる。track との間に余白を作る。 */
+  border: 2px solid transparent;
+  background-clip: content-box;
 }
 
 .option {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   text-align: left;
   padding: 8px 12px;
   border: none;
@@ -90,6 +130,24 @@
   color: var(--ink);
   font-size: 13px;
   cursor: pointer;
+  white-space: nowrap;
+}
+
+.option:hover {
+  background: var(--card);
+}
+
+/* 複数選択のチェック印。付いていない行でも幅を取って文字位置を揃える。 */
+.check {
+  flex: 0 0 12px;
+  width: 12px;
+  font-size: 11px;
+  line-height: 1;
+  color: var(--accent-hover);
+}
+
+.optionActive .check {
+  color: var(--brand-text);
 }
 
 .optionActive {

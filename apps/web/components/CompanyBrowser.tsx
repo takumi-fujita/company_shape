@@ -1,10 +1,19 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import CompanyTable from './CompanyTable';
 import styles from './CompanyBrowser.module.css';
 import { count, normalize, num } from '@/lib/format';
+import {
+  isMulti,
+  SALARY_OPTIONS,
+  selectedValues,
+  SIZE_OPTIONS,
+  TENURE_OPTIONS,
+  type PickKey,
+  type Picks,
+} from '@/lib/filters';
 import {
   buildPageItems,
   clampPage,
@@ -31,23 +40,6 @@ const SORTS: { key: SortKey; label: string }[] = [
   { key: 'run', label: '手元資金の余力が長い順' },
 ];
 
-/** 数値レンジのフィルタ。業種・市場はデータから生成する（33 業種でも増やさないため）。 */
-const SIZE_OPTIONS = [
-  { label: '〜300 名', test: (v: number | null) => v != null && v < 300 },
-  { label: '300〜1,000 名', test: (v: number | null) => v != null && v >= 300 && v < 1000 },
-  { label: '1,000 名〜', test: (v: number | null) => v != null && v >= 1000 },
-];
-const SALARY_OPTIONS = [
-  { label: '600 万円以上', test: (v: number | null) => v != null && v >= 6000 },
-  { label: '700 万円以上', test: (v: number | null) => v != null && v >= 7000 },
-];
-const TENURE_OPTIONS = [
-  { label: '5 年以上', test: (v: number | null) => v != null && v >= 5 },
-  { label: '8 年以上', test: (v: number | null) => v != null && v >= 8 },
-];
-
-type PickKey = 'industry' | 'size' | 'salary' | 'tenure' | 'market';
-type Picks = Partial<Record<PickKey, string>>;
 
 /** null は常に最下位。降順ソート。 */
 function desc(a: number | null, b: number | null): number {
@@ -74,6 +66,26 @@ export default function CompanyBrowser({ industryStats }: Props) {
   const [failed, setFailed] = useState(false);
   const [picks, setPicks] = useState<Picks>({});
   const [openFilter, setOpenFilter] = useState<PickKey | null>(null);
+  const filtersRef = useRef<HTMLDivElement>(null);
+
+  // ポップオーバーの外側をクリックしたら閉じる。Esc でも閉じる。
+  useEffect(() => {
+    if (openFilter === null) return;
+    const onPointerDown = (e: MouseEvent | TouchEvent) => {
+      if (!filtersRef.current?.contains(e.target as Node)) setOpenFilter(null);
+    };
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpenFilter(null);
+    };
+    document.addEventListener('mousedown', onPointerDown);
+    document.addEventListener('touchstart', onPointerDown);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', onPointerDown);
+      document.removeEventListener('touchstart', onPointerDown);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [openFilter]);
 
   /**
    * 検索語・ページ・件数は URL に持つ。詳細ページからブラウザバックで戻ったときに
@@ -139,14 +151,18 @@ export default function CompanyBrowser({ industryStats }: Props) {
   const filtered = useMemo(() => {
     if (!entries) return [];
     const q = normalize(query.trim());
+    const industries_ = selectedValues(picks, 'industry');
+    const market = selectedValues(picks, 'market')[0];
+    const size = SIZE_OPTIONS.find((o) => o.label === selectedValues(picks, 'size')[0]);
+    const sal = SALARY_OPTIONS.find((o) => o.label === selectedValues(picks, 'salary')[0]);
+    const ten = TENURE_OPTIONS.find((o) => o.label === selectedValues(picks, 'tenure')[0]);
+
     return entries.filter((e) => {
-      if (picks.industry && e.industryLabel !== picks.industry) return false;
-      if (picks.market && e.market !== picks.market) return false;
-      const size = SIZE_OPTIONS.find((o) => o.label === picks.size);
+      // 業種は複数選択。1 つでも一致すれば通す。
+      if (industries_.length && !industries_.includes(e.industryLabel)) return false;
+      if (market && e.market !== market) return false;
       if (size && !size.test(e.employees)) return false;
-      const sal = SALARY_OPTIONS.find((o) => o.label === picks.salary);
       if (sal && !sal.test(e.avgSalary)) return false;
-      const ten = TENURE_OPTIONS.find((o) => o.label === picks.tenure);
       if (ten && !ten.test(e.avgTenure)) return false;
       if (q) {
         const hit =
@@ -181,24 +197,40 @@ export default function CompanyBrowser({ industryStats }: Props) {
   }
 
   function pick(key: PickKey, value: string) {
-    setPicks((p) => ({ ...p, [key]: value }));
-    setOpenFilter(null);
+    setPicks((p) => {
+      const next = { ...p };
+      if (isMulti(key)) {
+        // 複数選択は付け外し。ポップオーバーは開いたままにして続けて選べるようにする。
+        const current = selectedValues(p, key);
+        const updated = current.includes(value)
+          ? current.filter((v) => v !== value)
+          : [...current, value];
+        if (updated.length) next[key] = updated;
+        else delete next[key];
+      } else {
+        next[key] = value;
+      }
+      return next;
+    });
+    if (!isMulti(key)) setOpenFilter(null);
     // 絞り込みが変われば件数が変わるので、先頭ページへ戻す。
     updateUrl({ page: 1 });
   }
 
+  /** チップ本体のクリック。開閉だけを行う（解除は × から）。 */
   function toggle(key: PickKey) {
-    if (picks[key]) {
-      setPicks((p) => {
-        const next = { ...p };
-        delete next[key];
-        return next;
-      });
-      setOpenFilter(null);
-      updateUrl({ page: 1 });
-    } else {
-      setOpenFilter((o) => (o === key ? null : key));
-    }
+    setOpenFilter((o) => (o === key ? null : key));
+  }
+
+  /** チップの × のクリック。その条件だけ外す。 */
+  function clearPick(key: PickKey) {
+    setPicks((p) => {
+      const next = { ...p };
+      delete next[key];
+      return next;
+    });
+    setOpenFilter(null);
+    updateUrl({ page: 1 });
   }
 
   return (
@@ -210,9 +242,16 @@ export default function CompanyBrowser({ industryStats }: Props) {
         </p>
       </div>
 
-      <div className={styles.filters}>
+      <div className={styles.filters} ref={filtersRef}>
         {groups.map((g) => {
-          const active = picks[g.key];
+          const chosen = selectedValues(picks, g.key);
+          const active = chosen.length > 0;
+          // 複数選択のチップは「ソフトウェア開発 他2件」のように畳む。
+          const label = !active
+            ? g.label
+            : chosen.length === 1
+              ? chosen[0]
+              : `${chosen[0]} 他${chosen.length - 1}件`;
           return (
             <div key={g.key} className={styles.chipWrap}>
               <button
@@ -221,21 +260,45 @@ export default function CompanyBrowser({ industryStats }: Props) {
                 aria-expanded={openFilter === g.key}
                 onClick={() => toggle(g.key)}
               >
-                {active ?? g.label}
-                <span className={styles.marker}>{active ? '×' : '⌄'}</span>
+                {label}
+                <span
+                  className={styles.marker}
+                  role={active ? 'button' : undefined}
+                  aria-label={active ? `${g.label}の条件を外す` : undefined}
+                  onClick={
+                    active
+                      ? (e) => {
+                          // チップ本体の開閉に伝播させない。
+                          e.stopPropagation();
+                          clearPick(g.key);
+                        }
+                      : undefined
+                  }
+                >
+                  {active ? '×' : '⌄'}
+                </span>
               </button>
               {openFilter === g.key && (
                 <div className={styles.popover}>
-                  {g.options.map((o) => (
-                    <button
-                      key={o}
-                      type="button"
-                      className={`${styles.option}${active === o ? ` ${styles.optionActive}` : ''}`}
-                      onClick={() => pick(g.key, o)}
-                    >
-                      {o}
-                    </button>
-                  ))}
+                  {g.options.map((o) => {
+                    const on = chosen.includes(o);
+                    return (
+                      <button
+                        key={o}
+                        type="button"
+                        className={`${styles.option}${on ? ` ${styles.optionActive}` : ''}`}
+                        aria-pressed={isMulti(g.key) ? on : undefined}
+                        onClick={() => pick(g.key, o)}
+                      >
+                        {isMulti(g.key) && (
+                          <span className={styles.check} aria-hidden="true">
+                            {on ? '✓' : ''}
+                          </span>
+                        )}
+                        {o}
+                      </button>
+                    );
+                  })}
                 </div>
               )}
             </div>
