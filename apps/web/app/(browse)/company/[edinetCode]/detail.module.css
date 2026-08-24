@@ -1,3 +1,8 @@
+/*
+ * 一覧から辿ってきたときは BrowseShell のドロワーの中に入る。
+ * 右から出てくる動きはドロワー側が持っているので、ここでは何もしない。
+ * 検索から直接来たときは今までどおり 1 枚のページとして出る。
+ */
 .main {
   max-width: var(--content-width);
   margin: 0 auto;
@@ -250,6 +255,9 @@
   flex-direction: column;
   gap: 8px;
   min-height: 132px;
+  /* 数字の大きさをカード幅から決めるため。画面幅ではなくカード幅で見る必要が
+     ある。同じ画面幅でも、ドロワーの中では 1 割ぶん狭くなる。 */
+  container-type: inline-size;
 }
 
 .scoreWarn {
@@ -271,19 +279,32 @@
   display: flex;
   align-items: baseline;
   gap: 5px;
+  min-width: 0;
 }
 
+/*
+ * 桁数の多い会社でも単位がカードの外へ出ないように、幅に合わせて縮める。
+ * 最長は従業員数の 7 文字（トヨタ自動車の 390,927 名）。等幅数字なので
+ * 7 文字 ≒ 4.0em、単位「千円」と隙間で ≒ 30px。合わせてカード幅に収める。
+ * 広いカードでは 30px で頭打ちにして、これまでの見た目を変えない。
+ */
 .scoreValue {
+  /* コンテナクエリ非対応のブラウザ向けの保険。対応していれば次の行が勝つ。 */
   font-size: 30px;
+  font-size: clamp(16px, calc((100cqi - 30px) / 4), 30px);
   font-weight: 500;
   line-height: 1.1;
   color: var(--ink);
   font-variant-numeric: tabular-nums;
+  min-width: 0;
 }
 
 .scoreUnit {
+  flex: 0 0 auto;
   font-size: 12px;
   color: var(--ink-sub);
+  /* 「千円」が「千」「円」に折れないように。 */
+  white-space: nowrap;
 }
 
 .scoreFoot {
@@ -662,4 +683,12 @@
   gap: 6px;
   font-size: 11px;
   color: var(--ink-muted);
+}
+
+/* 補助金テーブル。同じ年度に同じ制度で複数回交付されたときの件数。 */
+.subCount {
+  margin-left: 4px;
+  font-size: 11px;
+  color: var(--ink-muted);
+  white-space: nowrap;
 }

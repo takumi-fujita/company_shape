@@ -1,16 +1,24 @@
 'use client';
 
-import { useRouter, useSearchParams } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import CompanyTable from './CompanyTable';
+import { useBrowseNav } from './browse-nav';
 import styles from './CompanyBrowser.module.css';
 import { count, normalize, num } from '@/lib/format';
 import {
+  applyPicksToParams,
+  hasAnyPick,
+  industryOptions,
   isMulti,
+  MARKET_OPTIONS,
+  matches,
+  parsePicks,
   SALARY_OPTIONS,
   selectedValues,
   SIZE_OPTIONS,
   TENURE_OPTIONS,
+  type FilterOption,
   type PickKey,
   type Picks,
 } from '@/lib/filters';
@@ -49,13 +57,34 @@ function desc(a: number | null, b: number | null): number {
   return b - a;
 }
 
-interface Props {
-  industryStats: IndustryStat[];
+const LIST_PATH = '/companies';
+
+/**
+ * 一覧にいるあいだの検索パラメータを覚えておく。
+ *
+ * 詳細をドロワーで重ねているあいだ URL は /company/[code]/ になり、
+ * 絞り込みのパラメータは URL から消える。そのまま読むと背後の一覧の条件が
+ * 外れてしまうので、一覧を離れたら最後の値を持ち続ける。
+ *
+ * 詳細の URL に条件を引きずらせる手もあるが、それだと 4,290 本の正規 URL に
+ * クエリ付きの別 URL が生えることになる。URL は今までどおり素のままにする。
+ */
+function useListParams(): URLSearchParams {
+  const params = useSearchParams();
+  const pathname = usePathname();
+  const onList = pathname === LIST_PATH || pathname === `${LIST_PATH}/`;
+  const qs = params.toString();
+  const held = useRef<URLSearchParams>(new URLSearchParams(qs));
+  // 中身が変わったときだけ作り直す。毎回作ると picks から order までの
+  // useMemo が総崩れになり、順番を報告する effect が延々と再発火する。
+  if (onList && held.current.toString() !== qs) held.current = new URLSearchParams(qs);
+  return held.current;
 }
 
-export default function CompanyBrowser({ industryStats }: Props) {
+export default function CompanyBrowser() {
   const router = useRouter();
-  const params = useSearchParams();
+  const nav = useBrowseNav();
+  const params = useListParams();
   const query = params.get('q') ?? '';
   const perPage = parsePageSize(params.get('per'));
   // 並び順も URL に持つ。ページ番号だけ URL にあると、共有した URL や
@@ -63,9 +92,13 @@ export default function CompanyBrowser({ industryStats }: Props) {
   const sort = parseSort(params.get('sort'));
 
   const [entries, setEntries] = useState<SearchIndexEntry[] | null>(null);
+  const [industryStats, setIndustryStats] = useState<IndustryStat[]>([]);
   const [failed, setFailed] = useState(false);
-  const [picks, setPicks] = useState<Picks>({});
   const [openFilter, setOpenFilter] = useState<PickKey | null>(null);
+
+  const industries = useMemo(() => industryOptions(industryStats), [industryStats]);
+  // 絞り込み条件も URL に持つ。詳細ページから戻ったときに同じ画面へ戻すため。
+  const picks = useMemo(() => parsePicks(params, industries), [params, industries]);
   const filtersRef = useRef<HTMLDivElement>(null);
 
   // ポップオーバーの外側をクリックしたら閉じる。Esc でも閉じる。
@@ -92,7 +125,13 @@ export default function CompanyBrowser({ industryStats }: Props) {
    * 同じ画面へ戻せるようにするため（ハンドオフ「一覧の検索条件は保持」）。
    * ページ送りで履歴が積み上がらないよう replace で入れ替える。
    */
-  function updateUrl(next: { q?: string; page?: number; per?: number; sort?: SortKey }) {
+  function updateUrl(next: {
+    q?: string;
+    page?: number;
+    per?: number;
+    sort?: SortKey;
+    picks?: Picks;
+  }) {
     const sp = new URLSearchParams(params.toString());
     const set = (key: string, value: string | undefined) => {
       if (value) sp.set(key, value);
@@ -101,19 +140,33 @@ export default function CompanyBrowser({ industryStats }: Props) {
     if ('q' in next) set('q', next.q?.trim() || undefined);
     if ('per' in next) set('per', next.per === undefined ? undefined : String(next.per));
     if ('sort' in next) set('sort', next.sort && next.sort !== DEFAULT_SORT ? next.sort : undefined);
+    if (next.picks) applyPicksToParams(sp, next.picks);
     if ('page' in next) set('page', !next.page || next.page === 1 ? undefined : String(next.page));
     const qs = sp.toString();
     router.replace(qs ? `/companies/?${qs}` : '/companies/', { scroll: false });
   }
 
+  /**
+   * 会社の一覧と業種中央値。どちらもここでしか使わないので実行時に取りに行く。
+   * サーバー側で埋め込むと、同じレイアウトに属する詳細ページ 4,290 枚すべてに
+   * 載ってしまう（詳細から見れば要らないデータ）。
+   */
   useEffect(() => {
     let alive = true;
-    fetch('/search-index.json')
-      .then((r) => {
-        if (!r.ok) throw new Error(String(r.status));
-        return r.json() as Promise<SearchIndexEntry[]>;
+    const load = async (url: string) => {
+      const r = await fetch(url);
+      if (!r.ok) throw new Error(`${url}: ${r.status}`);
+      return r.json();
+    };
+    Promise.all([
+      load('/search-index.json') as Promise<SearchIndexEntry[]>,
+      load('/industry-stats.json') as Promise<IndustryStat[]>,
+    ])
+      .then(([index, stats]) => {
+        if (!alive) return;
+        setIndustryStats(stats);
+        setEntries(index);
       })
-      .then((d) => alive && setEntries(d))
       .catch(() => alive && setFailed(true));
     return () => {
       alive = false;
@@ -126,44 +179,22 @@ export default function CompanyBrowser({ industryStats }: Props) {
     return m;
   }, [industryStats]);
 
-  const industries = useMemo(
-    () => industryStats.map((s) => s.industryLabel).sort((a, b) => a.localeCompare(b, 'ja')),
-    [industryStats],
-  );
-
-  const markets = useMemo(() => {
-    const set = new Set<string>();
-    entries?.forEach((e) => e.market && set.add(e.market));
-    return ['プライム', 'スタンダード', 'グロース'].filter((m) => set.has(m));
-  }, [entries]);
-
-  const groups = useMemo(
+  const groups: { key: PickKey; label: string; options: FilterOption[] }[] = useMemo(
     () => [
-      { key: 'industry' as const, label: '業種', options: industries },
-      { key: 'size' as const, label: '従業員数', options: SIZE_OPTIONS.map((o) => o.label) },
-      { key: 'salary' as const, label: '平均年収', options: SALARY_OPTIONS.map((o) => o.label) },
-      { key: 'tenure' as const, label: '勤続年数', options: TENURE_OPTIONS.map((o) => o.label) },
-      { key: 'market' as const, label: '市場', options: markets },
+      { key: 'industry', label: '業種', options: industries },
+      { key: 'size', label: '従業員数', options: SIZE_OPTIONS },
+      { key: 'salary', label: '平均年収', options: SALARY_OPTIONS },
+      { key: 'tenure', label: '勤続年数', options: TENURE_OPTIONS },
+      { key: 'market', label: '市場', options: MARKET_OPTIONS },
     ],
-    [industries, markets],
+    [industries],
   );
 
   const filtered = useMemo(() => {
     if (!entries) return [];
     const q = normalize(query.trim());
-    const industries_ = selectedValues(picks, 'industry');
-    const market = selectedValues(picks, 'market')[0];
-    const size = SIZE_OPTIONS.find((o) => o.label === selectedValues(picks, 'size')[0]);
-    const sal = SALARY_OPTIONS.find((o) => o.label === selectedValues(picks, 'salary')[0]);
-    const ten = TENURE_OPTIONS.find((o) => o.label === selectedValues(picks, 'tenure')[0]);
-
     return entries.filter((e) => {
-      // 業種は複数選択。1 つでも一致すれば通す。
-      if (industries_.length && !industries_.includes(e.industryLabel)) return false;
-      if (market && e.market !== market) return false;
-      if (size && !size.test(e.employees)) return false;
-      if (sal && !sal.test(e.avgSalary)) return false;
-      if (ten && !ten.test(e.avgTenure)) return false;
+      if (!matches(e, picks)) return false;
       if (q) {
         const hit =
           normalize(e.name).includes(q) ||
@@ -185,36 +216,53 @@ export default function CompanyBrowser({ industryStats }: Props) {
     return filtered.slice().sort((a, b) => desc(key(a), key(b)));
   }, [filtered, sort]);
 
+  const order = useMemo(() => sorted.map((e) => e.edinetCode), [sorted]);
+
   const pageCount = totalPages(sorted.length, perPage);
+  // ドロワーで開いている会社が背後の一覧にも見えているように、その会社を
+  // 含むページへ寄せる。前へ / 次へ でページをまたいでも一覧がついてくる。
+  const openAt = nav?.currentCode ? order.indexOf(nav.currentCode) : -1;
   // URL のページ番号は信用しない。件数やフィルタが変われば範囲外になる。
-  const page = clampPage(params.get('page'), pageCount);
+  const page =
+    openAt >= 0 ? Math.floor(openAt / perPage) + 1 : clampPage(params.get('page'), pageCount);
   const visible = sorted.slice((page - 1) * perPage, page * perPage);
   const span = pageRange(page, perPage, sorted.length);
   const pageItems = buildPageItems(page, pageCount);
+
+  /** ドロワーを閉じたときの戻り先。いま見えている一覧そのもの。 */
+  const listHref = useMemo(() => {
+    const sp = new URLSearchParams(params.toString());
+    if (page > 1) sp.set('page', String(page));
+    else sp.delete('page');
+    const qs = sp.toString();
+    return qs ? `${LIST_PATH}/?${qs}` : `${LIST_PATH}/`;
+  }, [params, page]);
+
+  const report = nav?.report;
+  useEffect(() => {
+    report?.({ order, listHref });
+  }, [report, order, listHref]);
 
   function goToPage(next: number) {
     updateUrl({ page: clampPage(next, pageCount) });
   }
 
-  function pick(key: PickKey, value: string) {
-    setPicks((p) => {
-      const next = { ...p };
-      if (isMulti(key)) {
-        // 複数選択は付け外し。ポップオーバーは開いたままにして続けて選べるようにする。
-        const current = selectedValues(p, key);
-        const updated = current.includes(value)
-          ? current.filter((v) => v !== value)
-          : [...current, value];
-        if (updated.length) next[key] = updated;
-        else delete next[key];
-      } else {
-        next[key] = value;
-      }
-      return next;
-    });
+  function pick(key: PickKey, id: string) {
+    const next: Picks = { ...picks };
+    if (isMulti(key)) {
+      // 複数選択は付け外し。ポップオーバーは開いたままにして続けて選べるようにする。
+      const current = selectedValues(picks, key);
+      const updated = current.includes(id)
+        ? current.filter((v) => v !== id)
+        : [...current, id];
+      if (updated.length) next[key] = updated;
+      else delete next[key];
+    } else {
+      next[key] = [id];
+    }
     if (!isMulti(key)) setOpenFilter(null);
     // 絞り込みが変われば件数が変わるので、先頭ページへ戻す。
-    updateUrl({ page: 1 });
+    updateUrl({ picks: next, page: 1 });
   }
 
   /** チップ本体のクリック。開閉だけを行う（解除は × から）。 */
@@ -224,13 +272,10 @@ export default function CompanyBrowser({ industryStats }: Props) {
 
   /** チップの × のクリック。その条件だけ外す。 */
   function clearPick(key: PickKey) {
-    setPicks((p) => {
-      const next = { ...p };
-      delete next[key];
-      return next;
-    });
+    const next: Picks = { ...picks };
+    delete next[key];
     setOpenFilter(null);
-    updateUrl({ page: 1 });
+    updateUrl({ picks: next, page: 1 });
   }
 
   return (
@@ -246,12 +291,13 @@ export default function CompanyBrowser({ industryStats }: Props) {
         {groups.map((g) => {
           const chosen = selectedValues(picks, g.key);
           const active = chosen.length > 0;
+          const labelOf = (id: string) => g.options.find((o) => o.id === id)?.label ?? id;
           // 複数選択のチップは「ソフトウェア開発 他2件」のように畳む。
           const label = !active
             ? g.label
             : chosen.length === 1
-              ? chosen[0]
-              : `${chosen[0]} 他${chosen.length - 1}件`;
+              ? labelOf(chosen[0])
+              : `${labelOf(chosen[0])} 他${chosen.length - 1}件`;
           return (
             <div key={g.key} className={styles.chipWrap}>
               <button
@@ -281,21 +327,21 @@ export default function CompanyBrowser({ industryStats }: Props) {
               {openFilter === g.key && (
                 <div className={styles.popover}>
                   {g.options.map((o) => {
-                    const on = chosen.includes(o);
+                    const on = chosen.includes(o.id);
                     return (
                       <button
-                        key={o}
+                        key={o.id}
                         type="button"
                         className={`${styles.option}${on ? ` ${styles.optionActive}` : ''}`}
                         aria-pressed={isMulti(g.key) ? on : undefined}
-                        onClick={() => pick(g.key, o)}
+                        onClick={() => pick(g.key, o.id)}
                       >
                         {isMulti(g.key) && (
                           <span className={styles.check} aria-hidden="true">
                             {on ? '✓' : ''}
                           </span>
                         )}
-                        {o}
+                        {o.label}
                       </button>
                     );
                   })}
@@ -304,14 +350,13 @@ export default function CompanyBrowser({ industryStats }: Props) {
             </div>
           );
         })}
-        {(Object.keys(picks).length > 0 || query) && (
+        {(hasAnyPick(picks) || query) && (
           <button
             type="button"
             className={styles.clear}
             onClick={() => {
-              setPicks({});
               setOpenFilter(null);
-              updateUrl({ q: undefined, page: 1 });
+              updateUrl({ q: undefined, picks: {}, page: 1 });
             }}
           >
             条件をすべて外す
@@ -367,7 +412,12 @@ export default function CompanyBrowser({ industryStats }: Props) {
         <div className={styles.empty}>条件に当てはまる会社は {count(0)} でした。</div>
       ) : (
         <>
-          <CompanyTable entries={visible} statsByIndustry={medianByIndustry} />
+          <CompanyTable
+            entries={visible}
+            statsByIndustry={medianByIndustry}
+            activeCode={nav?.currentCode ?? null}
+            keepScroll={nav !== null}
+          />
 
           {pageCount > 1 && (
             <nav className={styles.pagination} aria-label="ページ送り">

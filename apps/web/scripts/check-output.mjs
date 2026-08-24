@@ -34,6 +34,13 @@ if (fs.existsSync(index)) {
   }
 }
 
+// 1b. 一覧が読む業種中央値。無いと絞り込みの選択肢が空になる。
+const stats = must('industry-stats.json', 'npm run build の prebuild で生成される');
+if (fs.existsSync(stats)) {
+  const rows = JSON.parse(fs.readFileSync(stats, 'utf8'));
+  if (!Array.isArray(rows) || rows.length === 0) problems.push('industry-stats.json が空');
+}
+
 // 2. robots.txt が指す sitemap が実在するか
 const robots = must('robots.txt', 'app/robots.ts で生成される');
 if (fs.existsSync(robots)) {

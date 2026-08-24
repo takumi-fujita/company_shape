@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
-import styles from '../companies/hub.module.css';
+import styles from '@/app/hub.module.css';
 import { REMOVAL_FORM_URL, SITE_NAME } from '@/lib/site';
 
 export const metadata: Metadata = {

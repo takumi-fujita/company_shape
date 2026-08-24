@@ -4,6 +4,7 @@ out/
 *.tsbuildinfo
 next-env.d.ts
 public/search-index.json
+public/industry-stats.json
 
 .env
 .env.*

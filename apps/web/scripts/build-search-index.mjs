@@ -1,5 +1,9 @@
 /**
- * public/search-index.json をビルド前に生成する。
+ * public/search-index.json と public/industry-stats.json をビルド前に生成する。
+ *
+ * 業種中央値は一覧（絞り込みの選択肢と「中央値未満」の判定）だけが使う。
+ * サーバー側で埋め込むと、一覧と同じレイアウトに属する 4,290 の詳細ページ
+ * すべてのペイロードに載ってしまうので、一覧が実行時に取りに行く形にする。
  *
  * 含めるフィールドを増やさないこと（gzip 後 2MB 以内に収める必要がある）。
  * data/companies.db があればそれを、無ければ fixtures/companies.json を読む。
@@ -17,6 +21,7 @@ const DB_PATH = process.env.COMPANIES_DB
   : path.join(REPO_ROOT, 'data', 'companies.db');
 const FIXTURE_PATH = path.join(REPO_ROOT, 'fixtures', 'companies.json');
 const OUT_PATH = path.join(WEB_ROOT, 'public', 'search-index.json');
+const STATS_PATH = path.join(WEB_ROOT, 'public', 'industry-stats.json');
 
 /** gzip 後の上限。超えたらフィールドを削ること。 */
 const MAX_GZIP_BYTES = 2 * 1024 * 1024;
@@ -113,6 +118,21 @@ function fromSqlite() {
   }));
 }
 
+function statsFromSqlite() {
+  const rows = readWithRetry((db) => db.prepare('SELECT * FROM industry_stats').all());
+  return rows.map((r) => ({
+    industryCode: r.industry_code,
+    industryLabel: r.industry_label,
+    companyCount: r.company_count,
+    medianSalary: r.median_salary ?? null,
+    medianTenure: r.median_tenure ?? null,
+  }));
+}
+
+function statsFromFixtures() {
+  return JSON.parse(fs.readFileSync(FIXTURE_PATH, 'utf8')).industryStats;
+}
+
 function fromFixtures() {
   const { companies } = JSON.parse(fs.readFileSync(FIXTURE_PATH, 'utf8'));
   return companies.map((c) => ({
@@ -130,7 +150,9 @@ function fromFixtures() {
   }));
 }
 
-const index = fs.existsSync(DB_PATH) ? fromSqlite() : fromFixtures();
+const hasDb = fs.existsSync(DB_PATH);
+const index = hasDb ? fromSqlite() : fromFixtures();
+const stats = hasDb ? statsFromSqlite() : statsFromFixtures();
 const json = JSON.stringify(index);
 const gzipped = gzipSync(json).length;
 
@@ -145,4 +167,10 @@ fs.mkdirSync(path.dirname(OUT_PATH), { recursive: true });
 fs.writeFileSync(OUT_PATH, json);
 console.log(
   `search-index.json: ${index.length} companies, ${(json.length / 1024).toFixed(1)}KB raw / ${(gzipped / 1024).toFixed(1)}KB gzipped`,
+);
+
+const statsJson = JSON.stringify(stats);
+fs.writeFileSync(STATS_PATH, statsJson);
+console.log(
+  `industry-stats.json: ${stats.length} industries, ${(statsJson.length / 1024).toFixed(1)}KB raw`,
 );

@@ -15,10 +15,23 @@ import type { IndustryStat, SearchIndexEntry } from '@/lib/types';
 interface Props {
   entries: SearchIndexEntry[];
   statsByIndustry: Map<string, IndustryStat>;
+  /** ドロワーで開いている会社。一覧のどれを見ているのか分かるようにする。 */
+  activeCode?: string | null;
+  /**
+   * 遷移で先頭へ飛ばさない。一覧からドロワーを開くときに使う。
+   * 業種ページ・ランキングページからは普通のページ遷移なので既定のまま。
+   */
+  keepScroll?: boolean;
 }
 
-export default function CompanyTable({ entries, statsByIndustry }: Props) {
+export default function CompanyTable({
+  entries,
+  statsByIndustry,
+  activeCode = null,
+  keepScroll = false,
+}: Props) {
   const router = useRouter();
+  const open = (href: string) => router.push(href, { scroll: !keepScroll });
 
   const rows = entries.map((e) => {
     const stat = statsByIndustry.get(e.industryCode);
@@ -28,6 +41,7 @@ export default function CompanyTable({ entries, statsByIndustry }: Props) {
       entry: e,
       href: `/company/${e.edinetCode}/`,
       meta: [e.market, e.secCode, e.industryLabel].filter(Boolean).join('・'),
+      active: e.edinetCode === activeCode,
       run: runwayDisplay(e.runway),
       salPill: salLevel ? ({ level: salLevel, text: '中央値未満' } as const) : null,
       tenPill: tenLevel ? ({ level: tenLevel, text: '短め' } as const) : null,
@@ -49,10 +63,15 @@ export default function CompanyTable({ entries, statsByIndustry }: Props) {
           </thead>
           <tbody>
             {rows.map((r) => (
-              <tr key={r.entry.edinetCode} className={styles.row} onClick={() => router.push(r.href)}>
+              <tr
+                key={r.entry.edinetCode}
+                className={`${styles.row}${r.active ? ` ${styles.rowActive}` : ''}`}
+                aria-current={r.active ? 'true' : undefined}
+                onClick={() => open(r.href)}
+              >
                 <td className={`${styles.td} ${styles.tdFirst}`}>
                   <span className={styles.nameCell}>
-                    <Link className={`${styles.name} ${styles.rowLink}`} href={r.href}>
+                    <Link className={`${styles.name} ${styles.rowLink}`} href={r.href} scroll={!keepScroll}>
                       {r.entry.name}
                     </Link>
                     <span className={styles.meta}>{r.meta}</span>
@@ -85,10 +104,19 @@ export default function CompanyTable({ entries, statsByIndustry }: Props) {
 
       <div className={styles.cards}>
         {rows.map((r) => (
-          <div key={r.entry.edinetCode} className={styles.card} onClick={() => router.push(r.href)}>
+          <div
+            key={r.entry.edinetCode}
+            className={`${styles.card}${r.active ? ` ${styles.cardActive}` : ''}`}
+            aria-current={r.active ? 'true' : undefined}
+            onClick={() => open(r.href)}
+          >
             <span className={styles.cardTop}>
               <span className={styles.nameCell}>
-                <Link className={`${styles.cardName} ${styles.rowLink}`} href={r.href}>
+                <Link
+                  className={`${styles.cardName} ${styles.rowLink}`}
+                  href={r.href}
+                  scroll={!keepScroll}
+                >
                   {r.entry.name}
                 </Link>
                 <span className={styles.meta}>{r.meta}</span>

@@ -1,0 +1,181 @@
+/*
+ * 詳細を一覧の上に重ねるドロワー。
+ *
+ * 一覧はレイアウトに置いたまま生きているので、背後で暗くなるだけ。
+ * 閉じれば絞り込みもページ番号もそのまま残る。
+ */
+.shell {
+  position: relative;
+}
+
+/* ---- 背後の一覧 ---- */
+.behind {
+  transition: filter 0.2s ease;
+}
+
+.behind[inert] {
+  /* 開いているあいだは触らせない。暗さは scrim 側で作る。 */
+  filter: saturate(0.85);
+}
+
+.scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: rgba(20, 32, 28, 0.42);
+  animation: fadeIn 0.2s ease both;
+}
+
+/* ---- ドロワー ---- */
+.drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 41;
+  width: 72%;
+  max-width: 1180px;
+  /*
+   * 中身（詳細ページ）は 760px でカード表示に切り替わる。広いほうのレイアウトを
+   * 760px 未満の箱に入れると崩れるので、下限を置く。ビューポートが 760px を
+   * 下回るときは中身もカードになるので、下限は 100% で頭打ちにしてよい。
+   */
+  min-width: min(760px, 100%);
+  display: flex;
+  flex-direction: column;
+  background: var(--panel);
+  box-shadow: -18px 0 48px rgba(20, 32, 28, 0.18);
+  animation: slideIn 0.26s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  outline: none;
+}
+
+@media (max-width: 1099px) {
+  .drawer {
+    width: 90%;
+  }
+}
+
+/* スマホ。カード表示になるので 9 割で足りる。残りの 1 割で後ろの一覧を見せる。 */
+@media (max-width: 759px) {
+  .drawer {
+    width: 90%;
+    min-width: 0;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: none;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* 動きを減らす設定の人には動かさない。 */
+@media (prefers-reduced-motion: reduce) {
+  .drawer,
+  .scrim {
+    animation: none;
+  }
+}
+
+/* ---- 上部の操作列 ---- */
+/*
+ * 本文と同じ白だと 1px の罫線しか手がかりがなく、操作列として見えない。
+ * ページ背景と同じグレーを敷いて、白いボタンが浮くようにする。
+ */
+.bar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--hairline);
+  background: var(--sub);
+}
+
+.steps {
+  display: flex;
+  gap: 6px;
+}
+
+.step {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 34px;
+  padding: 0 14px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--hairline);
+  background: var(--panel);
+  color: var(--ink-sub);
+  font-size: 13px;
+  font-weight: 400;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.12s ease, color 0.12s ease;
+}
+
+.step:hover:not(:disabled) {
+  background: var(--brand);
+  color: var(--brand-text);
+}
+
+/*
+ * 白いピルのままだと、グレーのバーの上で 0.4 に落としたときに文字が
+ * ほぼ読めなくなる（コントラスト 1.5:1）。面を外して文字だけ弱める。
+ * 押せる = 白いピル、押せない = 文字だけ、という区別にする。
+ */
+.step:disabled {
+  background: transparent;
+  border-color: transparent;
+  color: var(--ink-muted);
+  cursor: default;
+}
+
+.position {
+  font-size: 13px;
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.close {
+  margin-left: auto;
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--hairline);
+  background: var(--panel);
+  color: var(--ink-sub);
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.12s ease, color 0.12s ease;
+}
+
+.close:hover {
+  background: var(--brand);
+  color: var(--brand-text);
+}
+
+/* ---- 中身 ---- */
+.body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  /* 端まで送っても背後の一覧が動かないように。 */
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}

@@ -5,7 +5,7 @@ import CompanyTable from '@/components/CompanyTable';
 import { buildSearchIndex, getIndustryStat, getIndustryStats } from '@/lib/db';
 import { METRIC_KEYS, METRICS, rankingSlug } from '@/lib/ranking';
 import { count, num } from '@/lib/format';
-import styles from '../../companies/hub.module.css';
+import styles from '@/app/hub.module.css';
 
 export const dynamicParams = false;
 

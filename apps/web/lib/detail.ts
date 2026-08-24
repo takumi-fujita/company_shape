@@ -4,7 +4,7 @@
  */
 import { EM_DASH, num, salary as fmtSalary, signed, signedPercent, unit } from './format';
 import { HEADCOUNT, type Level, RUNWAY, SALARY, TENURE } from './thresholds';
-import type { Company, IndustryStat, Subsidy } from './types';
+import type { Company, IndustryStat, SubsidyRow } from './types';
 
 export interface Pill {
   level: Exclude<Level, null>;
@@ -219,17 +219,36 @@ export const SUBSIDY_YEARS = 4;
 /**
  * 直近 N 年度の交付決定。表の行と合計行の対象を必ず同じにする。
  * 件数で切ると合計が表の一部だけを指すことになり、数字が合わなくなる。
+ *
+ * 同じ年度に同じ制度から複数回交付されることが実際にある（368 社中 127 社）。
+ * gBizINFO の交付決定 1 件 = 1 行のままだと、金額しか違わない行が 90 行以上
+ * 並ぶ会社が出るので、年度と制度名でまとめて件数を添える。合計額は変わらない。
  */
-export function recentSubsidies(c: Company, years = SUBSIDY_YEARS): Subsidy[] {
+export function recentSubsidies(c: Company, years = SUBSIDY_YEARS): SubsidyRow[] {
   if (c.subsidies.length === 0) return [];
   const newest = Math.max(...c.subsidies.map((s) => s.year));
-  return c.subsidies
-    .filter((s) => s.year > newest - years)
-    .sort((a, b) => b.year - a.year || b.amount - a.amount);
+
+  const groups = new Map<string, SubsidyRow>();
+  for (const s of c.subsidies) {
+    if (s.year <= newest - years) continue;
+    const key = `${s.year}\u0000${s.name}`;
+    const hit = groups.get(key);
+    if (!hit) {
+      groups.set(key, { ...s, count: 1 });
+      continue;
+    }
+    hit.amount += s.amount;
+    hit.count += 1;
+    // 売上比は同じ年度の売上に対する比なので足せる。
+    // ただし 1 件でも売上不明があれば、その年度の合計比は出せない。
+    hit.ratio = hit.ratio == null || s.ratio == null ? null : hit.ratio + s.ratio;
+  }
+
+  return [...groups.values()].sort((a, b) => b.year - a.year || b.amount - a.amount);
 }
 
 /** 補助金テーブルの合計行。recentSubsidies と同じ行を対象にする。 */
-export function subsidyTotals(rows: Subsidy[], c: Company): { amount: number | null; ratio: number | null } {
+export function subsidyTotals(rows: SubsidyRow[], c: Company): { amount: number | null; ratio: number | null } {
   if (rows.length === 0) return { amount: null, ratio: null };
   const amount = rows.reduce((a, s) => a + s.amount, 0);
   const rev = latest(c)?.revenue ?? null;

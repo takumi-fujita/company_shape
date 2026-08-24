@@ -353,7 +353,7 @@ export default async function CompanyPage({
           {segmentNames.length > 0 && (
             <span className={styles.legendRow}>
               {segmentNames.map((name, i) => (
-                <span key={name} className={styles.legendItem}>
+                <span key={`${name}-${i}`} className={styles.legendItem}>
                   <span
                     className={styles.swatchBox}
                     style={{ background: SEGMENT_COLORS[i % SEGMENT_COLORS.length] }}
@@ -369,8 +369,8 @@ export default async function CompanyPage({
           <table className={`${styles.dataTable} narrowOnly`}>
             <tbody>
               {latest?.segments.length ? (
-                latest.segments.map((s) => (
-                  <tr key={s.name}>
+                latest.segments.map((s, i) => (
+                  <tr key={`${s.name}-${i}`}>
                     <td className={styles.dataTd}>{s.name}</td>
                     <td className={styles.dataTdNum}>{yen(s.value)}</td>
                   </tr>
@@ -408,12 +408,16 @@ export default async function CompanyPage({
                 </tr>
               </thead>
               <tbody>
+                {/* 同じ年度・同じ制度は recentSubsidies でまとめてある。 */}
                 {subsidies.map((s) => (
                   <tr key={`${s.year}-${s.name}`}>
                     <td className={`${styles.subTd} ${styles.subTdMuted} ${styles.padLeft}`}>
                       {s.year}年度
                     </td>
-                    <td className={styles.subTd}>{s.name}</td>
+                    <td className={styles.subTd}>
+                      {s.name}
+                      {s.count > 1 && <span className={styles.subCount}>（{s.count}件）</span>}
+                    </td>
                     <td className={styles.subTdNum}>{yen(s.amount)}</td>
                     <td className={`${styles.subTdNum} ${styles.padRight}`}>
                       {percent(s.ratio, 2)}

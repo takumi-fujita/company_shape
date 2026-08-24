@@ -56,9 +56,15 @@ test('従業員数の前期比: 0% は無彩色、マイナスで warn、-10% �
   assert.equal(headcountLevel(null), null);
 });
 
-const company = (subsidies: { year: number; amount: number }[]) =>
+const company = (subsidies: { year: number; amount: number; name?: string; ratio?: number | null }[]) =>
   ({
-    subsidies: subsidies.map((s) => ({ ...s, name: String(s.year), ratio: null, source: 'gbizinfo' })),
+    subsidies: subsidies.map((s) => ({
+      year: s.year,
+      amount: s.amount,
+      name: s.name ?? String(s.year),
+      ratio: s.ratio ?? null,
+      source: 'gbizinfo',
+    })),
     fiscalPeriods: [{ label: '26/3', seq: 0, revenue: 12000, operatingProfit: 700, employees: 312, avgSalary: 6480, segments: [] }],
   }) as never;
 
@@ -89,4 +95,43 @@ test('補助金 0 件なら合計も「—」になる値を返す', () => {
   const rows = recentSubsidies(c);
   assert.deepEqual(rows, []);
   assert.deepEqual(subsidyTotals(rows, c), { amount: null, ratio: null });
+});
+
+test('同じ年度の同じ制度はまとめ、件数と金額を合算する', () => {
+  const c = company([
+    { year: 2025, amount: 375, name: '鉄道施設災害復旧事業費補助', ratio: 0.3 },
+    { year: 2025, amount: 12, name: '鉄道施設災害復旧事業費補助', ratio: 0.01 },
+    { year: 2025, amount: 5, name: '文化財等保存整備事業', ratio: 0.004 },
+  ]);
+  const rows = recentSubsidies(c);
+  assert.equal(rows.length, 2);
+  assert.equal(rows[0].name, '鉄道施設災害復旧事業費補助');
+  assert.equal(rows[0].amount, 387);
+  assert.equal(rows[0].count, 2);
+  assert.ok(Math.abs((rows[0].ratio ?? 0) - 0.31) < 1e-9);
+  assert.equal(rows[1].count, 1);
+  // まとめても合計は変わらない。
+  assert.equal(subsidyTotals(rows, c).amount, 375 + 12 + 5);
+});
+
+test('年度が違えば同じ制度でもまとめない', () => {
+  const c = company([
+    { year: 2025, amount: 10, name: '同じ制度' },
+    { year: 2024, amount: 20, name: '同じ制度' },
+  ]);
+  const rows = recentSubsidies(c);
+  assert.deepEqual(rows.map((r) => [r.year, r.amount, r.count]), [
+    [2025, 10, 1],
+    [2024, 20, 1],
+  ]);
+});
+
+test('売上比が 1 件でも不明なら、まとめた行の売上比は出さない', () => {
+  const c = company([
+    { year: 2025, amount: 10, name: '制度', ratio: 0.1 },
+    { year: 2025, amount: 20, name: '制度', ratio: null },
+  ]);
+  const rows = recentSubsidies(c);
+  assert.equal(rows[0].amount, 30);
+  assert.equal(rows[0].ratio, null);
 });

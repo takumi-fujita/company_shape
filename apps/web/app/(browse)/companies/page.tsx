@@ -1,7 +1,4 @@
-import { Suspense } from 'react';
 import type { Metadata } from 'next';
-import CompanyBrowser from '@/components/CompanyBrowser';
-import { getIndustryStats } from '@/lib/db';
 
 export const metadata: Metadata = {
   title: '会社をさがす｜従業員数・平均年収・勤続年数で上場企業を比較',
@@ -10,12 +7,10 @@ export const metadata: Metadata = {
   alternates: { canonical: '/companies/' },
 };
 
+/**
+ * 一覧の中身はレイアウト側（BrowseShell）が描く。詳細へ移っても
+ * アンマウントさせないため。このページはメタデータだけを担う。
+ */
 export default function CompaniesPage() {
-  // 業種中央値だけビルド時に埋め込む。会社の一覧は search-index.json を実行時に取得する。
-  const industryStats = getIndustryStats();
-  return (
-    <Suspense>
-      <CompanyBrowser industryStats={industryStats} />
-    </Suspense>
-  );
+  return null;
 }

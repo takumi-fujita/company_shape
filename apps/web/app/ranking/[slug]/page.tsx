@@ -13,7 +13,7 @@ import {
   summarize,
 } from '@/lib/ranking';
 import { count } from '@/lib/format';
-import styles from '../../companies/hub.module.css';
+import styles from '@/app/hub.module.css';
 
 export const dynamicParams = false;
 

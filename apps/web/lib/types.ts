@@ -24,6 +24,14 @@ export interface Subsidy {
   source: string; // gbizinfo
 }
 
+/**
+ * 補助金テーブルの 1 行。同じ年度の同じ制度をまとめたもの。
+ * count は元になった交付決定の件数（1 なら「（N件）」は出さない）。
+ */
+export interface SubsidyRow extends Subsidy {
+  count: number;
+}
+
 /** 業種内パーセンタイル 0-100。ETL 側で確定済み。欠損は 50。 */
 export interface Percentiles {
   salary: number;
