@@ -255,8 +255,29 @@ def run(args):
         conn.close()
         return 0
 
-    dates = list(edinet.daterange(args.date_from, args.date_to))
-    log.info("対象期間 %s..%s (%d 日)", args.date_from, args.date_to, len(dates))
+    # 各社の最新提出だけをもう一度取り込むモード。
+    #
+    # 差分実行は filed_at が一致する提出を「取り込み済み」として飛ばす。
+    # DB の filed_at は最新提出の日付なので、日付を全部なぞり直しても
+    # **最新の 1 通だけは永久に再抽出されない**。抽出の誤りを直したときに
+    # 一番目立つ期が直らない、という形で実際に起きた。
+    #
+    # 対象は最新提出があった日だけなので、全期間を舐め直すより桁で速い。
+    targets = {}
+    if args.refresh_latest:
+        for code, filed in known.items():
+            if not filed:
+                continue
+            day = filed[:10]
+            if not (args.date_from <= day <= args.date_to):
+                continue
+            targets.setdefault(day, set()).add(code)
+        dates = sorted(targets)
+        log.info("最新提出の再取り込み: %d 社 / %d 日",
+            sum(len(v) for v in targets.values()), len(dates))
+    else:
+        dates = list(edinet.daterange(args.date_from, args.date_to))
+        log.info("対象期間 %s..%s (%d 日)", args.date_from, args.date_to, len(dates))
 
     seen, skipped, imported, failed = 0, 0, 0, 0
 
@@ -270,12 +291,22 @@ def run(args):
             failed += 1
             continue
 
+        # どこまで進んだかを日付で残す。強制終了しても、この行を見れば
+        # --from を指定して続きから再開できる（取り込み行には日付が無い）。
+        if docs:
+            log.info("提出日 %s: %d 通（累計 取り込み %d / 既存 %d）", date, len(docs), imported, skipped)
+
         for doc in docs:
             seen += 1
             if args.limit and imported >= args.limit:
                 log.info("--limit %d に到達したので打ち切ります", args.limit)
                 break
-            if not args.force and known.get(doc["edinet_code"]) == doc["filed_at"]:
+            if args.refresh_latest:
+                # その日に出た他社の提出は対象外。最新提出そのものだけを通す。
+                if doc["edinet_code"] not in targets.get(date, ()):
+                    skipped += 1
+                    continue
+            elif not args.force and known.get(doc["edinet_code"]) == doc["filed_at"]:
                 skipped += 1
                 continue
             try:
@@ -339,6 +370,8 @@ def main(argv=None):
     p.add_argument("--db", default=DEFAULT_DB)
     p.add_argument("--limit", type=int, default=0, help="取り込む会社数の上限（試験用）")
     p.add_argument("--force", action="store_true", help="filed_at が同じでも再取得する")
+    p.add_argument("--refresh-latest", action="store_true",
+        help="各社の最新提出だけを取り込み直す（抽出を直したあとに使う）")
     p.add_argument("--subsidies-only", action="store_true", help="補助金だけ全社分を取り直す")
     p.add_argument("--skip-subsidies", action="store_true", help="補助金の取り込みを行わない")
     p.add_argument("--industries-only", action="store_true",

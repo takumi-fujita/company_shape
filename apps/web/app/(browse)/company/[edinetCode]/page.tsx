@@ -391,7 +391,7 @@ export default async function CompanyPage({
         <div className={styles.tableHead}>
           <h2 className={styles.h2}>国や自治体から受け取ったお金</h2>
           <span className={styles.sectionLead}>
-            売上に占める比率も並べています。出典: gBizINFO（交付決定ベース）
+            売上比は、その年度の売上に占める割合です。出典: gBizINFO（交付決定ベース）
           </span>
         </div>
         {subsidies.length === 0 ? (

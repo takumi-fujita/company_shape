@@ -247,12 +247,46 @@ export function recentSubsidies(c: Company, years = SUBSIDY_YEARS): SubsidyRow[]
   return [...groups.values()].sort((a, b) => b.year - a.year || b.amount - a.amount);
 }
 
-/** 補助金テーブルの合計行。recentSubsidies と同じ行を対象にする。 */
+/**
+ * 日本の年度。4 月始まり。
+ * pipeline/transform/subsidy.py の fiscal_year_of と同じ規則。片方だけ変えないこと。
+ */
+function fiscalYearOf(year: number, month: number): number {
+  return month >= 4 ? year : year - 1;
+}
+
+/** {年度: 売上高(百万円)}。label "26/3" は 2026 年 3 月期なので 2025 年度。 */
+function revenueByFiscalYear(c: Company): Map<number, number> {
+  const out = new Map<number, number>();
+  for (const p of c.fiscalPeriods) {
+    const m = /^(\d{2})\/(\d{1,2})$/.exec(p.label);
+    if (!m || p.revenue == null) continue;
+    out.set(fiscalYearOf(2000 + Number(m[1]), Number(m[2])), p.revenue);
+  }
+  return out;
+}
+
+/**
+ * 補助金テーブルの合計行。recentSubsidies と同じ行を対象にする。
+ *
+ * 売上比は各行と同じ考え方で出す。各行が「その年度の売上に対する比」なので、
+ * 合計は「同じ年度たちの売上合計に対する比」。最新期の売上だけで割ると、
+ * 行と合計で分母が変わる（5 期の売上のばらつきは中央値で 26%）。
+ */
 export function subsidyTotals(rows: SubsidyRow[], c: Company): { amount: number | null; ratio: number | null } {
   if (rows.length === 0) return { amount: null, ratio: null };
   const amount = rows.reduce((a, s) => a + s.amount, 0);
-  const rev = latest(c)?.revenue ?? null;
-  return { amount, ratio: rev && rev > 0 ? (amount / rev) * 100 : null };
+
+  const revenues = revenueByFiscalYear(c);
+  let denominator = 0;
+  for (const year of new Set(rows.map((r) => r.year))) {
+    const revenue = revenues.get(year);
+    // 1 年度でも売上が欠けたら比は出さない。取れた年度だけで割ると分母が
+    // 小さくなり、実際より大きな比率に見えてしまう。
+    if (revenue == null) return { amount, ratio: null };
+    denominator += revenue;
+  }
+  return { amount, ratio: denominator > 0 ? (amount / denominator) * 100 : null };
 }
 
 /** データ欠損の案内（困り顔のデータくん）を出すか。 */

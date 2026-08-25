@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import CompanyTable from '@/components/CompanyTable';
+import CompanyRows from '@/components/CompanyRows';
 import { buildSearchIndex, getIndustryStat, getIndustryStats } from '@/lib/db';
 import {
   METRIC_KEYS,
@@ -123,7 +123,7 @@ export default async function RankingPage({ params }: { params: Promise<{ slug: 
         </Link>
       </div>
 
-      <CompanyTable entries={entries} statsByIndustry={stats} />
+      <CompanyRows entries={entries} statsByIndustry={stats} />
 
       <p className={styles.note}>数値は有価証券報告書からの機械抽出です。評価・解釈は含みません。</p>
     </main>

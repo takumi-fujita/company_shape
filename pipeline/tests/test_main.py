@@ -24,6 +24,7 @@ class Args(object):
         self.date_to = kw.get("date_to", "2026-06-26")
         self.limit = kw.get("limit", 0)
         self.force = kw.get("force", False)
+        self.refresh_latest = kw.get("refresh_latest", False)
         self.subsidies_only = kw.get("subsidies_only", False)
         self.industries_only = kw.get("industries_only", False)
         self.skip_subsidies = kw.get("skip_subsidies", True)
@@ -112,6 +113,43 @@ class MainCase(unittest.TestCase):
         etl.run(Args(self.db))
         etl.run(Args(self.db, force=True))
         self.assertEqual(len(self.downloads), 2)
+
+    def test_refresh_latest_refetches_the_newest_filing(self):
+        """抽出を直したあとに使うモード。
+
+        差分実行は filed_at が一致する提出を必ず飛ばすので、日付を全部
+        なぞり直しても最新の 1 通だけは再抽出されない。実際にそれで
+        セグメントの修正が最新期だけ反映されなかった。
+        """
+        etl.run(Args(self.db))
+        self.assertEqual(len(self.downloads), 1)
+        # 通常の再実行では飛ばされる。
+        etl.run(Args(self.db))
+        self.assertEqual(len(self.downloads), 1)
+        # --refresh-latest なら取り直す。
+        etl.run(Args(self.db, refresh_latest=True, date_from="2021-04-01", date_to="2026-08-25"))
+        self.assertEqual(len(self.downloads), 2, "最新提出を取り直していない")
+
+    def test_refresh_latest_only_visits_days_with_filings(self):
+        """対象は DB にある提出日だけ。全期間を舐めない。"""
+        etl.run(Args(self.db))
+        visited = []
+        original = edinet.list_documents
+        edinet.list_documents = lambda date: (visited.append(date), original(date))[1]
+        try:
+            etl.run(Args(self.db, refresh_latest=True, date_from="2021-04-01", date_to="2026-08-25"))
+        finally:
+            edinet.list_documents = original
+        self.assertEqual(visited, ["2026-06-26"], "提出日以外の日も見に行っている")
+
+    def test_refresh_latest_ignores_other_companies_on_the_same_day(self):
+        """同じ日に出た他社の提出は対象外（その社の最新提出ではない）。"""
+        etl.run(Args(self.db))
+        docs = [dict(DOC), dict(DOC, doc_id="S100YYYY", edinet_code="E05678", name="別の会社")]
+        edinet.list_documents = lambda date: [dict(d) for d in docs]
+        before = len(self.downloads)
+        etl.run(Args(self.db, refresh_latest=True, date_from="2021-04-01", date_to="2026-08-25"))
+        self.assertEqual(len(self.downloads) - before, 1, "対象外の会社まで取り込んでいる")
 
     def test_one_broken_company_does_not_stop_the_run(self):
         """1 社の失敗で全体を止めない。"""

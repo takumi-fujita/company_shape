@@ -122,6 +122,33 @@ class TestSegments(unittest.TestCase):
                     include_totals=False)["periods"][-1]["segments"]
         self.assertLessEqual(len(segs), 3)
 
+    def test_standard_taxonomy_aggregates_are_dropped(self):
+        """報告セグメント計と調整額は事業ではない。
+
+        実物では最大値の「報告セグメント計」が内訳の先頭に並び、
+        大きい順 3 件の枠を 1 つ食っていた（2,466 社中 1,982 社）。
+        """
+        segs = load(include_totals=False, include_standard_members=True)["periods"][-1]["segments"]
+        names = [s["name"] for s in segs]
+        self.assertNotIn("ReportableSegmentsMember", names)
+        self.assertNotIn("ReconcilingItemsMember", names)
+        # 集計行が枠を食わないので、実セグメントが 3 件そのまま残る。
+        self.assertEqual(names, ["主力事業", "関連サービス", "保守・その他"])
+
+    def test_standard_other_member_gets_japanese_name(self):
+        """標準タクソノミの「その他」はラベルが引けないので既定名を当てる。"""
+        segs = load(segments=(("Core", 300),), include_totals=False,
+                    include_standard_members=True)["periods"][-1]["segments"]
+        self.assertEqual([s["name"] for s in segs], ["主力事業", "その他"])
+
+    def test_filer_segments_containing_reportablesegments_survive(self):
+        """提出会社のメンバーは "CoreReportableSegmentsMember" のような形。
+
+        集計行の除外を部分一致でやると、これらが巻き添えで消える。
+        """
+        names = [s["name"] for s in load(include_totals=False)["periods"][-1]["segments"]]
+        self.assertEqual(names, ["主力事業", "関連サービス", "保守・その他"])
+
 
 class TestConsolidation(unittest.TestCase):
     def test_consolidated_filing_uses_consolidated_contexts(self):

@@ -53,6 +53,7 @@ def build_instance(
     tenure_months="10",
     segments=(("Core", 300), ("Related", 230), ("Maintenance", 170)),
     include_totals=True,
+    include_standard_members=False,
     with_salary=True,
 ):
     """5 期分の主要指標を持つインスタンス文書を作る。金額の引数は百万円。"""
@@ -130,6 +131,22 @@ def build_instance(
             % (cid, value * 1_000_000)
         )
 
+    # 標準タクソノミのメンバー。提出書類のラベルリンクベースには入らないので
+    # 名前が引けず、実物では識別子がそのまま出ていた。
+    if include_standard_members:
+        for local, value in (
+            ("ReportableSegmentsMember", 700),          # 報告セグメント計
+            ("ReconcilingItemsMember", -30),            # 調整額
+            ("OtherReportableSegmentsMember", 40),      # その他
+        ):
+            cid = "CurrentYearDuration_Std_%s" % local
+            ctx.append(_context(cid, start=starts[4], end=ends[4],
+                                members=("jppfs_cor:%s" % local,)))
+            facts.append(
+                '<jppfs_cor:OperatingIncomeLoss contextRef="%s" unitRef="JPY" decimals="-6">%d</jppfs_cor:OperatingIncomeLoss>'
+                % (cid, value * 1_000_000)
+            )
+
     dei = [
         '<jpdei_cor:EDINETCodeDEI contextRef="FilingDateInstant">%s</jpdei_cor:EDINETCodeDEI>' % edinet_code,
         '<jpdei_cor:FilerNameInJapaneseDEI contextRef="FilingDateInstant">株式会社テスト工業</jpdei_cor:FilerNameInJapaneseDEI>',
@@ -160,6 +177,8 @@ SEGMENT_LABELS = {
     "Maintenance": "保守・その他",
     "Total": "合計",
     "Elimination": "調整額",
+    # 抽出を直す前の値を再現するためのテスト用ラベル。
+    "Wrong": "誤った区分",
 }
 
 

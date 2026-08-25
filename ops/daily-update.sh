@@ -11,6 +11,7 @@
 #   bash ops/daily-update.sh                 # 前日分
 #   bash ops/daily-update.sh 2026-06-26      # 日付を指定
 #   ETL_DATE_FROM=2025-04-01 ETL_DATE_TO=2026-08-22 bash ops/daily-update.sh
+#   ETL_REFRESH_LATEST=true bash ops/daily-update.sh # 抽出を直したあと、各社の最新提出だけ取り直す
 #   SKIP_DEPLOY=true bash ops/daily-update.sh # 配信せずデータ更新だけ
 #   SKIP_GIT=true    bash ops/daily-update.sh # git を一切触らない（一括投入用）
 #
@@ -170,6 +171,10 @@ fi
 
 ETL_ARGS=(--from "$DATE_FROM" --to "$DATE_TO")
 [ "${ETL_LIMIT:-0}" != "0" ] && [ -n "${ETL_LIMIT:-}" ] && ETL_ARGS+=(--limit "$ETL_LIMIT")
+[ "${ETL_FORCE:-false}" = "true" ] && ETL_ARGS+=(--force)
+# 抽出を直したあとに使う。差分実行は各社の最新提出を必ず飛ばすため、
+# これを付けないとパーサの修正が最新期に反映されない。
+[ "${ETL_REFRESH_LATEST:-false}" = "true" ] && ETL_ARGS+=(--refresh-latest)
 [ "${ETL_SKIP_SUMMARIES:-false}" = "true" ] && ETL_ARGS+=(--skip-summaries)
 [ "${ETL_SKIP_SUBSIDIES:-false}" = "true" ] && ETL_ARGS+=(--skip-subsidies)
 [ "${ETL_SUBSIDIES_ONLY:-false}" = "true" ] && ETL_ARGS+=(--subsidies-only)

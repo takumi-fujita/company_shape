@@ -90,6 +90,25 @@ SEGMENT = {
     "operating_profit": ["OperatingIncomeLoss", "OperatingIncome", "SegmentProfitLoss"],
 }
 
+#: セグメント内訳から落とす標準タクソノミのメンバー（ローカル名の完全一致）。
+#: これらは事業ではなく集計行・調整額。内訳として並べると、報告セグメント計が
+#: 最大の「事業」として出てしまい、何で稼いでいるのかを読み違えさせる。
+#:
+#: 完全一致で見ること。提出会社が自前で立てるメンバーは
+#: "CoreReportableSegmentsMember" のように接頭辞が付くので、
+#: 部分一致にすると実在の事業まで落ちる。
+SEGMENT_AGGREGATE_MEMBERS = {
+    "ReportableSegmentsMember",  # 報告セグメント計
+    "ReconcilingItemsMember",    # 調整額
+}
+
+#: 標準タクソノミのメンバーは提出書類のラベルリンクベースに含まれないため、
+#: label_for_member では名前が引けない。表示名をここで与える。
+SEGMENT_MEMBER_LABELS = {
+    "OperatingSegmentsNotIncludedInReportableSegmentsAndOtherRevenueGeneratingBusinessActivitiesMember": "その他",
+    "OtherReportableSegmentsMember": "その他",
+}
+
 #: 保持する期数。
 PERIODS = 5
 

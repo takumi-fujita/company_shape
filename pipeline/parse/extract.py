@@ -128,10 +128,17 @@ def extract_segments(instance, labels, end, consolidated):
     rows = []
     for value, ctx, _ in instance.find_all(config.SEGMENT["operating_profit"], predicate):
         member = next((m for m in ctx.members if "NonConsolidatedMember" not in m), None)
-        # 合計・調整額は内訳ではないので落とす
-        if member is None or "Total" in member or "Elimination" in member or "Adjustment" in member:
+        if member is None:
             continue
-        name = labelmod.label_for_member(labels, member) or member.rsplit(":", 1)[-1]
+        local = member.rsplit(":", 1)[-1]
+        # 標準タクソノミの集計行・調整額。完全一致で落とす。
+        if local in config.SEGMENT_AGGREGATE_MEMBERS:
+            continue
+        # 提出会社が自前で立てた合計・調整額。名前に現れるので部分一致で落とす。
+        if "Total" in member or "Elimination" in member or "Adjustment" in member:
+            continue
+        # ラベルリンクベース → 標準メンバーの既定名 → 最後の手段でローカル名。
+        name = labelmod.label_for_member(labels, member) or config.SEGMENT_MEMBER_LABELS.get(local) or local
         amount = _money_to_millions(value)
         if amount is None:
             continue

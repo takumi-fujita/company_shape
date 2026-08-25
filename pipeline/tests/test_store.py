@@ -244,3 +244,51 @@ class TestOutOfOrderFilings(StoreCase):
         self.assertEqual(asc[0]["employees"], desc_order[0]["employees"])
         self.assertEqual(asc[0]["cash"], desc_order[0]["cash"])
         self.assertEqual(asc[1], desc_order[1])
+
+
+class TestSegmentReparse(StoreCase):
+    """抽出の誤りを直して過去分を取り直したとき、古い期も更新されること。
+
+    実際にあった事故: セグメントに集計行が混ざっていたのを直したが、
+    5 年分を取り直しても「最新の提出より古い」扱いになるため、
+    過去 4 期は誤ったままだった。グラフは 5 期ぶんを積み上げるので全部見える。
+    """
+
+    def seg(self, label, code="E01234"):
+        import json
+        for p in self.periods(code):
+            if p["label"] == label:
+                return json.loads(p["segments"] or "[]")
+        return None
+
+    def test_reparsed_older_filing_replaces_its_own_period(self):
+        # 1. 誤った抽出のまま 2025 年提出を取り込む（当時の DB の状態）。
+        store.upsert_company(
+            self.conn,
+            extract(fiscal_year_end="2025-03-31", filed_at="2025-06-26",
+                    segments=(("Wrong", 999),), include_totals=False),
+            INDUSTRY, "2026-08-25",
+        )
+        # 2. そのあと 2026 年提出が入り、DB の最新提出日が 2026 になる。
+        store.upsert_company(self.conn, extract(filed_at="2026-06-26"), INDUSTRY, "2026-08-25")
+        self.assertEqual(self.seg("25/3"), [{"name": "誤った区分", "value": 999}])
+
+        # 3. 抽出を直して 2025 年提出を取り直す。古い提出だが、25/3 は上書きされる。
+        store.upsert_company(
+            self.conn,
+            extract(fiscal_year_end="2025-03-31", filed_at="2025-06-26",
+                    segments=(("Core", 111),), include_totals=False),
+            INDUSTRY, "2026-08-25",
+        )
+        self.assertEqual(self.seg("25/3"), [{"name": "主力事業", "value": 111}])
+
+    def test_reparsed_older_filing_leaves_newer_period_alone(self):
+        store.upsert_company(self.conn, extract(filed_at="2026-06-26"), INDUSTRY, "2026-08-25")
+        before = self.seg("26/3")
+        store.upsert_company(
+            self.conn,
+            extract(fiscal_year_end="2025-03-31", filed_at="2025-06-26",
+                    segments=(("Core", 111),), include_totals=False),
+            INDUSTRY, "2026-08-25",
+        )
+        self.assertEqual(self.seg("26/3"), before)

@@ -56,7 +56,14 @@ test('従業員数の前期比: 0% は無彩色、マイナスで warn、-10% �
   assert.equal(headcountLevel(null), null);
 });
 
-const company = (subsidies: { year: number; amount: number; name?: string; ratio?: number | null }[]) =>
+const period = (label: string, revenue: number | null) => ({
+  label, seq: 0, revenue, operatingProfit: 700, employees: 312, avgSalary: 6480, segments: [],
+});
+
+const company = (
+  subsidies: { year: number; amount: number; name?: string; ratio?: number | null }[],
+  periods = [period('26/3', 12000)],
+) =>
   ({
     subsidies: subsidies.map((s) => ({
       year: s.year,
@@ -65,7 +72,7 @@ const company = (subsidies: { year: number; amount: number; name?: string; ratio
       ratio: s.ratio ?? null,
       source: 'gbizinfo',
     })),
-    fiscalPeriods: [{ label: '26/3', seq: 0, revenue: 12000, operatingProfit: 700, employees: 312, avgSalary: 6480, segments: [] }],
+    fiscalPeriods: periods,
   }) as never;
 
 test('補助金は直近 4 年度だけを出し、合計はその行と一致する', () => {
@@ -134,4 +141,45 @@ test('売上比が 1 件でも不明なら、まとめた行の売上比は出�
   const rows = recentSubsidies(c);
   assert.equal(rows[0].amount, 30);
   assert.equal(rows[0].ratio, null);
+});
+
+test('合計の売上比は、行と同じ年度の売上合計で割る', () => {
+  // "25/3" は 2025 年 3 月期 = 2024 年度、"26/3" は 2025 年度。
+  const c = company(
+    [
+      { year: 2025, amount: 60 },
+      { year: 2024, amount: 40 },
+    ],
+    [period('25/3', 8000), period('26/3', 12000)],
+  );
+  const t = subsidyTotals(recentSubsidies(c), c);
+  assert.equal(t.amount, 100);
+  // 100 / (12000 + 8000) = 0.5%。最新期だけで割ると 0.83% になってしまう。
+  assert.ok(Math.abs((t.ratio ?? 0) - 0.5) < 1e-9);
+});
+
+test('年度が 1 つでも売上不明なら合計の売上比は出さない', () => {
+  const c = company(
+    [
+      { year: 2025, amount: 60 },
+      { year: 2024, amount: 40 },
+    ],
+    [period('25/3', null), period('26/3', 12000)],
+  );
+  const t = subsidyTotals(recentSubsidies(c), c);
+  assert.equal(t.amount, 100);
+  assert.equal(t.ratio, null);
+});
+
+test('同じ年度に複数の行があっても売上を二重に数えない', () => {
+  const c = company(
+    [
+      { year: 2025, amount: 60, name: 'A' },
+      { year: 2025, amount: 60, name: 'B' },
+    ],
+    [period('26/3', 12000)],
+  );
+  const t = subsidyTotals(recentSubsidies(c), c);
+  // 分母は 12000 の 1 回だけ。120 / 12000 = 1%
+  assert.ok(Math.abs((t.ratio ?? 0) - 1) < 1e-9);
 });

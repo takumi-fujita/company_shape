@@ -485,3 +485,12 @@
 .cardActive .cardName {
   color: var(--brand-text);
 }
+
+/*
+ * 行クリックを 1 か所で受けるための包み。
+ * display:contents なので、テーブルとカードは .main の flex 子のまま。
+ * レイアウトには現れないが、クリックは DOM を伝って届く。
+ */
+.rowsWrap {
+  display: contents;
+}

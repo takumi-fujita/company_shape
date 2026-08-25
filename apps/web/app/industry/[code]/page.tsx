@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import CompanyTable from '@/components/CompanyTable';
+import CompanyRows from '@/components/CompanyRows';
 import { buildSearchIndex, getIndustryStat, getIndustryStats } from '@/lib/db';
 import { METRIC_KEYS, METRICS, rankingSlug } from '@/lib/ranking';
 import { count, num } from '@/lib/format';
@@ -60,7 +60,7 @@ export default async function IndustryPage({ params }: { params: Promise<{ code:
         ))}
       </div>
 
-      <CompanyTable entries={entries} statsByIndustry={stats} />
+      <CompanyRows entries={entries} statsByIndustry={stats} />
 
       <div className={styles.links}>
         {[...stats.values()]

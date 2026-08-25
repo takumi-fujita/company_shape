@@ -66,7 +66,12 @@ def _merge_periods(existing, incoming, prefer_incoming=True):
                 cur.setdefault(key, None)
             elif prefer_incoming or cur.get(key) is None:
                 cur[key] = value
-        if p.get("segments") and (prefer_incoming or not cur.get("segments")):
+        # セグメントは prefer_incoming で縛らない。
+        # ある期のセグメントは、その期を「当期」として報告した 1 通からしか来ない
+        # （同じ提出の他の期は必ず空で来る）ので、提出どうしで競合しない。
+        # ここを新旧で縛ると、抽出の誤りを直して過去分を取り直しても、
+        # 最新の提出より古い期は永久に古い値のままになる。
+        if p.get("segments"):
             cur["segments"] = p["segments"]
         cur.setdefault("segments", [])
         merged[p["label"]] = cur
