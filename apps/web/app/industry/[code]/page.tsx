@@ -1,3 +1,4 @@
+import { openGraph } from '@/lib/site';
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
@@ -25,6 +26,7 @@ export async function generateMetadata({
     title: `${stat.industryLabel}の会社一覧｜平均年収・勤続年数・従業員数`,
     description: `${stat.industryLabel}の上場企業 ${num(stat.companyCount)} 社の平均年収・平均勤続年数・従業員数・手元資金の余力を、有価証券報告書のデータで一覧にしています。`,
     alternates: { canonical: `/industry/${code}/` },
+    openGraph: openGraph({ path: `/industry/${code}/` }),
   };
 }
 

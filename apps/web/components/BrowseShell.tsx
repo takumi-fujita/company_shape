@@ -107,10 +107,15 @@ export default function BrowseShell({ children }: Props) {
   return (
     <BrowseNavContext.Provider value={nav}>
       <div className={styles.shell} ref={shellRef}>
-        {/* useSearchParams を使うので境界が要る。詳細（children）はこの外にあるので、
-            詳細ページの静的 HTML はこれまでどおり丸ごと出力される。 */}
+        {/*
+          useSearchParams を使うので境界が要る。静的エクスポートでは
+          CompanyBrowser 全体がクライアント描画に倒れるため、この境界の
+          fallback がそのまま /companies/ の静的 HTML になる。
+          そこで一覧ページ（children）を fallback に置き、先頭 30 社を
+          クローラが読める形で出す。詳細ページはこの外にあるので影響しない。
+        */}
         <div className={styles.behind} inert={open || undefined} aria-hidden={open || undefined}>
-          <Suspense>
+          <Suspense fallback={currentCode ? null : children}>
             <CompanyBrowser />
           </Suspense>
         </div>

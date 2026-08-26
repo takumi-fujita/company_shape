@@ -1,12 +1,13 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import styles from '@/app/hub.module.css';
-import { REMOVAL_FORM_URL, SITE_NAME } from '@/lib/site';
+import { openGraph, REMOVAL_FORM_URL, SITE_NAME } from '@/lib/site';
 
 export const metadata: Metadata = {
   title: '掲載内容に関するご連絡・削除依頼',
   description: `${SITE_NAME}に掲載している数値の訂正・削除のご依頼と、掲載データの取得元・更新頻度についてのご案内です。`,
   alternates: { canonical: '/removal-request/' },
+  openGraph: openGraph({ path: '/removal-request/' }),
 };
 
 export default function RemovalRequestPage() {

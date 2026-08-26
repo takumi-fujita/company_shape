@@ -139,7 +139,7 @@ deploy_site() {
 
   log "Cloudflare Pages へ配信します"
   if ! wrangler pages deploy out \
-        --project-name "${CF_PAGES_PROJECT:-company-shape}" \
+        --project-name "${CF_PAGES_PROJECT:-kaisha-katachi}" \
         --branch "$BRANCH" 2>&1 | tee -a "$LOG_FILE"; then
     cd "$REPO_ROOT"; fail "配信に失敗しました。データは push 済みなので配信だけやり直せます。"
   fi

@@ -49,7 +49,7 @@ pwd    # 以降のコマンドはすべてここで実行する
 ```bash
 npm i -g wrangler
 wrangler login
-wrangler pages project create company-shape --production-branch main
+wrangler pages project create kaisha-katachi --production-branch main
 ```
 
 **ビルドは Cloudflare 側では行わない。** コンテナ（データ更新時）と GitHub Actions
@@ -310,7 +310,7 @@ cat pipeline/logs/failures.log          # 取り込みに失敗した会社
 ```bash
 # リポジトリのルートで
 # 配信だけ戻す（Cloudflare の以前のデプロイに切り替える）
-wrangler pages deployment list --project-name=company-shape
+wrangler pages deployment list --project-name=kaisha-katachi
 
 # データを戻す
 git revert <commit>

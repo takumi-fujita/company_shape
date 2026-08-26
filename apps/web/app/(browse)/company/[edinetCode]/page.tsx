@@ -29,7 +29,7 @@ import {
   tenure as fmtTen,
   yen,
 } from '@/lib/format';
-import { SITE_NAME, SITE_URL } from '@/lib/site';
+import { openGraph, SITE_NAME, SITE_URL } from '@/lib/site';
 import styles from './detail.module.css';
 
 export const dynamicParams = false;
@@ -60,7 +60,12 @@ export async function generateMetadata({
     alternates: { canonical: path },
     // データが 3 項目未満しか取れなかった薄いページは検索対象から外す。
     robots: isThin(c) ? { index: false, follow: true } : undefined,
-    openGraph: { title: `${c.name}の決算・従業員データ`, description, url: path, type: 'article' },
+    openGraph: openGraph({
+      path,
+      title: `${c.name}の決算・従業員データ`,
+      description,
+      type: 'article',
+    }),
   };
 }
 
@@ -532,8 +537,12 @@ export default async function CompanyPage({
         </div>
       </section>
 
-      {/* 16. フッター */}
-      <footer className={styles.footer}>
+      {/*
+        16. このページの数値についての注記。
+        サイト共通のフッター（SiteFooter）が別にあるので、ここは <footer> にしない。
+        ランドマークが 2 つあると支援技術からはどちらが本体か分からなくなる。
+      */}
+      <div className={styles.footer}>
         <span>
           EDINET・gBizINFO
           の公開データを機械的に集計して自動生成しています。転記誤りや期間の差異があるため、判断の際は一次情報もご確認ください。
@@ -541,8 +550,7 @@ export default async function CompanyPage({
         <span>
           <Link href="/removal-request/">掲載内容に関するご連絡・削除依頼</Link>
         </span>
-        <span>© 2026 {SITE_NAME}</span>
-      </footer>
+      </div>
     </main>
   );
 }

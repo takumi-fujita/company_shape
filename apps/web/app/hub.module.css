@@ -134,3 +134,14 @@
   color: var(--ink);
   font-variant-numeric: tabular-nums;
 }
+
+/* 規程・案内ページの小見出し。既存のウェイト（500）だけを使う。 */
+.h2 {
+  font-size: 17px;
+  font-weight: 500;
+}
+
+.list {
+  margin: 0;
+  padding-left: 1.4em;
+}

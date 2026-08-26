@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url';
 const WEB_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const OUT = path.join(WEB_ROOT, 'out');
 const SITEMAP_DIR = path.join(OUT, 'sitemap');
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://kaisha-no-katachi.jp';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://kaisha-katachi.com';
 
 if (!fs.existsSync(SITEMAP_DIR)) {
   console.error('out/sitemap/ not found. Run `next build` first.');

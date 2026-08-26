@@ -41,6 +41,40 @@ if (fs.existsSync(stats)) {
   if (!Array.isArray(rows) || rows.length === 0) problems.push('industry-stats.json が空');
 }
 
+// 1c. OGP。ページごとに openGraph を書くと Next が丸ごと差し替えるため、
+// og:image が消えたり og:url がトップを指したままになる事故が起きやすい。
+// 代表的なページを直接見て、両方が正しいことを確かめる。
+for (const [rel, want] of [
+  ['index.html', '/companies/'],
+  ['companies/index.html', '/companies/'],
+  ['removal-request/index.html', '/removal-request/'],
+]) {
+  const file = path.join(OUT, rel);
+  if (!fs.existsSync(file)) continue;
+  const html = fs.readFileSync(file, 'utf8');
+  if (!/property="og:image"/.test(html)) problems.push(`${rel} に og:image が無い`);
+  const m = html.match(/property="og:url" content="([^"]+)"/);
+  if (!m) problems.push(`${rel} に og:url が無い`);
+  else if (!m[1].endsWith(want)) problems.push(`${rel} の og:url が ${m[1]}（${want} で終わるはず）`);
+}
+
+// 動的ルートは 1 枚ずつ代表を見る。
+for (const [dir, suffix] of [['company', '/'], ['industry', '/'], ['ranking', '/']]) {
+  const base = path.join(OUT, dir);
+  if (!fs.existsSync(base)) continue;
+  const first = fs.readdirSync(base)[0];
+  if (!first) continue;
+  const file = path.join(base, first, 'index.html');
+  if (!fs.existsSync(file)) continue;
+  const html = fs.readFileSync(file, 'utf8');
+  if (!/property="og:image"/.test(html)) problems.push(`${dir}/${first}/ に og:image が無い`);
+  const m = html.match(/property="og:url" content="([^"]+)"/);
+  if (!m) problems.push(`${dir}/${first}/ に og:url が無い`);
+  else if (!m[1].endsWith(`/${dir}/${first}${suffix}`)) {
+    problems.push(`${dir}/${first}/ の og:url が ${m[1]}（自分自身を指していない）`);
+  }
+}
+
 // 2. robots.txt が指す sitemap が実在するか
 const robots = must('robots.txt', 'app/robots.ts で生成される');
 if (fs.existsSync(robots)) {

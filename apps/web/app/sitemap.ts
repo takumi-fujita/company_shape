@@ -28,6 +28,9 @@ export default async function sitemap({ id }: { id: SitemapId }): Promise<Metada
     return [
       { url: `${SITE_URL}/companies/`, changeFrequency: 'daily', priority: 1 },
       { url: `${SITE_URL}/removal-request/`, changeFrequency: 'yearly', priority: 0.1 },
+      { url: `${SITE_URL}/about/`, changeFrequency: 'yearly', priority: 0.1 },
+      { url: `${SITE_URL}/privacy/`, changeFrequency: 'yearly', priority: 0.1 },
+      { url: `${SITE_URL}/disclaimer/`, changeFrequency: 'yearly', priority: 0.1 },
     ];
   }
 

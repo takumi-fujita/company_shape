@@ -1,3 +1,4 @@
+import { openGraph } from '@/lib/site';
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
@@ -42,6 +43,7 @@ export async function generateMetadata({
       `${metric.label}の中央値は ${sum.median}。` +
       '数値は有価証券報告書からの機械抽出で、評価・解釈は含みません。',
     alternates: { canonical: `/ranking/${slug}/` },
+    openGraph: openGraph({ path: `/ranking/${slug}/` }),
     // 数社しかない業種は「ランキング」として成立しないので検索対象から外す。
     robots: sum.total < MIN_RANKED ? { index: false, follow: true } : undefined,
   };

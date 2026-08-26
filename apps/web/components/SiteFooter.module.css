@@ -1,0 +1,40 @@
+/*
+ * 全ページ共通のフッター。
+ * 既存トークンのみを使う（--ink-muted / --hairline）。
+ * 新しい色もフォントウェイトも足さないこと。
+ */
+.footer {
+  border-top: 1px solid var(--hairline);
+  margin-top: 48px;
+}
+
+.inner {
+  max-width: var(--content-width);
+  margin: 0 auto;
+  padding: 24px 20px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+}
+
+.links a {
+  color: var(--ink-muted);
+  text-decoration: none;
+}
+
+.links a:hover {
+  color: var(--ink-sub);
+  text-decoration: underline;
+}
+
+.note {
+  text-wrap: pretty;
+}
