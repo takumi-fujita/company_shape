@@ -59,6 +59,16 @@ body {
 }
 
 body {
+  /*
+   * 内容が少ないときにフッターが画面の途中に浮かないようにする。
+   * 検索の結果が 1 件だけ、といった場面で起きる。
+   * ヘッダーとフッターの間（.appContent）を伸ばして押し下げる。
+   */
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+
   background: var(--sub);
   color: var(--ink);
   /* Web フォント未使用。OS 標準の日本語ゴシックで初期表示を優先する。 */
@@ -138,4 +148,12 @@ select {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+
+/*
+ * ヘッダーとフッターに挟まれる本体。余った高さをここが受け取る。
+ * ページ側のレイアウトに影響しないよう、伸縮以外は何も持たせない。
+ */
+.appContent {
+  flex: 1 0 auto;
 }

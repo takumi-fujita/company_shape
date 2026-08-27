@@ -28,7 +28,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="ja">
       <body>
         <SiteHeader />
-        {children}
+        <div className="appContent">{children}</div>
         <SiteFooter />
       </body>
     </html>

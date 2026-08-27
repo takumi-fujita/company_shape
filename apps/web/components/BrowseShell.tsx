@@ -69,8 +69,11 @@ export default function BrowseShell({ children }: Props) {
     listScroll.current = window.scrollY;
     const prevOverflow = root.style.overflow;
     root.style.overflow = 'hidden';
+    // contains で見る。body 直下とは限らない（レイアウトが包む要素を挟むことがある）。
+    // el === shellRef.current だけで判定すると、シェルを含む親ごと無効化してしまい、
+    // ドロワー自身が操作できなくなる。
     const outside = Array.from(body.children).filter(
-      (el) => el !== shellRef.current && !el.hasAttribute('inert'),
+      (el) => !el.contains(shellRef.current) && !el.hasAttribute('inert'),
     );
     outside.forEach((el) => el.setAttribute('inert', ''));
     return () => {
