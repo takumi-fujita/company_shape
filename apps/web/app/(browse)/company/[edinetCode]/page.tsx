@@ -109,7 +109,15 @@ export default async function CompanyPage({
       {
         '@type': 'Dataset',
         name: `${c.name}の決算・従業員データ`,
-        description: '有価証券報告書・gBizINFO から機械抽出した数値データ。',
+        // Google の Dataset は description に 50〜5000 文字を求める。
+        // 短いと「文字列長が無効」としてリッチリザルトの対象から外れる。
+        // 会社ごとに中身が変わるよう、社名・コード・収録項目を書き下す。
+        description:
+          `${c.name}（EDINET コード ${c.edinetCode}）が提出した有価証券報告書から、` +
+          '従業員数・平均年収・平均勤続年数・売上高・営業利益を機械的に抽出し、' +
+          '直近 5 期の時系列として収録したデータセットです。' +
+          'あわせて gBizINFO による補助金の交付実績と、同業種内での相対順位を含みます。' +
+          '出典は金融庁 EDINET および経済産業省 gBizINFO の公開情報で、評価や解釈は含みません。',
         creator: { '@type': 'Organization', name: SITE_NAME },
         isBasedOn: ['https://disclosure2.edinet-fsa.go.jp/', 'https://info.gbiz.go.jp/'],
         dateModified: c.updatedAt,

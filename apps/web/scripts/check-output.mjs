@@ -75,6 +75,35 @@ for (const [dir, suffix] of [['company', '/'], ['industry', '/'], ['ranking', '/
   }
 }
 
+// 1d. 構造化データ。Google の Dataset は description に 50〜5000 文字を求める。
+// 短いと Search Console で「文字列長が無効」となりリッチリザルトから外れる。
+{
+  const base = path.join(OUT, 'company');
+  const first = fs.existsSync(base) ? fs.readdirSync(base)[0] : null;
+  const file = first && path.join(base, first, 'index.html');
+  if (file && fs.existsSync(file)) {
+    const html = fs.readFileSync(file, 'utf8');
+    const m = html.match(/<script type="application\/ld\+json">(.*?)<\/script>/s);
+    if (!m) problems.push(`company/${first}/ に JSON-LD が無い`);
+    else {
+      let graph;
+      try {
+        graph = JSON.parse(m[1])['@graph'];
+      } catch {
+        problems.push(`company/${first}/ の JSON-LD が壊れている`);
+      }
+      const dataset = (graph || []).find((n) => n['@type'] === 'Dataset');
+      if (!dataset) problems.push(`company/${first}/ に Dataset が無い`);
+      else {
+        const len = (dataset.description || '').length;
+        if (len < 50 || len > 5000) {
+          problems.push(`company/${first}/ の Dataset.description が ${len} 文字（50〜5000 が要件）`);
+        }
+      }
+    }
+  }
+}
+
 // 2. robots.txt が指す sitemap が実在するか
 const robots = must('robots.txt', 'app/robots.ts で生成される');
 if (fs.existsSync(robots)) {
