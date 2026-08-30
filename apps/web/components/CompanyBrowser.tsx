@@ -30,32 +30,8 @@ import {
   parsePageSize,
   totalPages,
 } from '@/lib/pagination';
+import { DEFAULT_SORT, parseSort, SORTS, sortEntries, type SortKey } from '@/lib/sort';
 import type { IndustryStat, SearchIndexEntry } from '@/lib/types';
-
-type SortKey = 'emp' | 'sal' | 'ten' | 'run';
-
-const SORT_KEYS: SortKey[] = ['emp', 'sal', 'ten', 'run'];
-const DEFAULT_SORT: SortKey = 'emp';
-
-function parseSort(value: string | null): SortKey {
-  return SORT_KEYS.includes(value as SortKey) ? (value as SortKey) : DEFAULT_SORT;
-}
-
-const SORTS: { key: SortKey; label: string }[] = [
-  { key: 'emp', label: '従業員数が多い順' },
-  { key: 'sal', label: '平均年収が高い順' },
-  { key: 'ten', label: '勤続年数が長い順' },
-  { key: 'run', label: '手元資金の余力が長い順' },
-];
-
-
-/** null は常に最下位。降順ソート。 */
-function desc(a: number | null, b: number | null): number {
-  if (a == null && b == null) return 0;
-  if (a == null) return 1;
-  if (b == null) return -1;
-  return b - a;
-}
 
 const LIST_PATH = '/companies';
 
@@ -206,15 +182,7 @@ export default function CompanyBrowser() {
     });
   }, [entries, picks, query]);
 
-  const sorted = useMemo(() => {
-    const key = {
-      emp: (e: SearchIndexEntry) => e.employees,
-      sal: (e: SearchIndexEntry) => e.avgSalary,
-      ten: (e: SearchIndexEntry) => e.avgTenure,
-      run: (e: SearchIndexEntry) => e.runway,
-    }[sort];
-    return filtered.slice().sort((a, b) => desc(key(a), key(b)));
-  }, [filtered, sort]);
+  const sorted = useMemo(() => sortEntries(filtered, sort), [filtered, sort]);
 
   const order = useMemo(() => sorted.map((e) => e.edinetCode), [sorted]);
 
