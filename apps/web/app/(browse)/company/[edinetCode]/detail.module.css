@@ -692,3 +692,13 @@
   color: var(--ink-muted);
   white-space: nowrap;
 }
+
+/* 広告のリンク。既存のアクセント色をそのまま使い、装飾は足さない。 */
+.adLink {
+  font-size: 13px;
+  color: var(--accent-hover);
+}
+
+.adLink:hover {
+  color: var(--accent);
+}

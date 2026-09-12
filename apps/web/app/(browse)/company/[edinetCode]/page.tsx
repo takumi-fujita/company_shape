@@ -484,18 +484,37 @@ export default async function CompanyPage({
         </div>
       </section>
 
-      {/* 13. 広告枠（ファーストビュー外）
-          広告がついてから出す。それまでは枠だけ見せない。
-      <aside className={styles.ad}>
-        <span className={styles.adBadge}>広告</span>
-        <span className={styles.adText}>
-          転職エージェント相談 — 選考中の会社の決算データの見方も聞けます
-        </span>
-        <a href="#" style={{ fontSize: 12 }}>
-          詳細
-        </a>
-      </aside>
+      {/*
+        13. 広告枠（ファーストビュー外）
+        afb（UZUZ／ウズキャリ）のテキストリンク。
+        - href と計測用 1x1 img は配布されたコードのまま。改変しない。
+        - rel は sponsored を足す（Google のリンクスパム対策のガイドライン）。
+          別タブで開くので noopener も足す。
+        - 「広告」表記は景品表示法のステルスマーケティング規制への対応。
+          視覚的にも読み上げ順としても、リンクより先に出す。
       */}
+      <aside className={styles.ad} aria-label="広告">
+        <span className={styles.adBadge}>広告</span>
+        <span className={styles.adText}>{c.name}の選考を受ける方へ</span>
+        <a
+          className={styles.adLink}
+          href="https://t.afi-b.com/visit.php?a=Y10585M-3356700c&p=r991679P"
+          rel="sponsored nofollow noopener"
+          target="_blank"
+        >
+          20代の転職相談ならウズキャリ（無料・登録3分）
+        </a>
+        {/* 成果計測用。表示はされないが必ず残すこと。 */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="https://t.afi-b.com/lead/Y10585M/r991679P/3356700c"
+          width="1"
+          height="1"
+          style={{ border: 'none' }}
+          alt=""
+          aria-hidden="true"
+        />
+      </aside>
 
       {/* 14. 同じ業種の会社 */}
       {peers.length > 0 && (
