@@ -17,6 +17,17 @@ data/companies.db        SQLite（コミットする。ビルド時にだけ読�
 fixtures/companies.json  ダミー 14 社（DB が無い環境でのフォールバック）
 ```
 
+ビルドの前処理（`prebuild`）が DB から 2 つの JSON を作る。どちらも
+`.gitignore` 済みで、`npm run build` / `npm run dev` のたびに作り直される。
+
+| 生成物 | 中身 | 読む場所 |
+| --- | --- | --- |
+| `apps/web/public/search-index.json` | 全社の検索用 1 行（gzip 後 126KB） | 一覧が実行時に取得 |
+| `apps/web/public/industry-stats.json` | 業種中央値（33 業種） | 同上 |
+
+どちらも一覧でしか使わないので、サーバー側で埋め込まず実行時に取りに行く。
+埋め込むと、同じレイアウトに属する会社ページ 4,290 枚すべてに載ってしまう。
+
 ## 動かす
 
 **以下のコマンドはすべてリポジトリのルートで実行する。** まず取得する。
@@ -111,6 +122,10 @@ SKIP_DEPLOY=true bash ops/daily-update.sh   # 配信せずデータ更新だけ
   「数字のまとめ」はテンプレート生成で、LLM を通さない。
 - フォントウェイトは 400 と 500 のみ。Web フォントは使わない。
 - 実行時に外部 API を呼ばない。すべてビルド時に解決する。
+  例外は一覧が取りに行く `search-index.json` / `industry-stats.json` の 2 つで、
+  これは自サイトの静的ファイル。
+- 会社ページの実データは必ず静的 HTML に出す。クライアント描画にしない。
+  `npm run check` の `check-output.mjs` が構造化データとあわせて検査する。
 - 閾値は `apps/web/lib/thresholds.ts` の 1 箇所のみで定義する。
 - `NEXT_PUBLIC_SITE_URL` に既定値を置かない。未設定なら本番ビルドを例外で止める。
   存在しないドメインが canonical や sitemap に混入したまま公開されるほうが高くつく。

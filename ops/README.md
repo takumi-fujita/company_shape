@@ -200,6 +200,46 @@ docker compose run --rm etl run
 `ETL_SKIP_SUMMARIES=true` を付けているのは、取り込みのたびに数千社分の要約を
 逐次生成してしまうのを避けるため。要約は 4 でまとめて作る。
 
+### 抽出を直したあとの入れ直し
+
+`pipeline/parse/` を直しても、**日付をなぞり直すだけでは各社の最新提出が反映されない**。
+差分実行が「DB の `filed_at` と一致する提出＝取り込み済み」として飛ばすためで、
+DB の `filed_at` は最新提出の日付だから、最新の 1 通だけが永久に更新されない。
+
+実際にこれで、セグメントの抽出を直して 5 年分を取り直したのに、
+過去 4 期しか直らず最新期が誤ったまま残った。
+
+```bash
+# 各社の最新提出だけを取り込み直す（提出が実在する日だけ回るので速い）
+docker compose run --rm \
+  -e ETL_REFRESH_LATEST=true \
+  -e ETL_SKIP_SUMMARIES=true -e ETL_SKIP_SUBSIDIES=true \
+  -e SKIP_GIT=true -e SKIP_DEPLOY=true etl run
+```
+
+過去の期も直す必要があるなら、先に期間を指定して取り直してから上を実行する。
+`ETL_FORCE=true` を付ければ `filed_at` が一致する提出も無条件で取り直すが、
+全期間だと 20,000 通を舐めるので、範囲を絞って使うこと。
+
+| 環境変数 | 用途 |
+| --- | --- |
+| `ETL_REFRESH_LATEST=true` | 各社の最新提出だけ取り込み直す。抽出を直したあとはこれ |
+| `ETL_FORCE=true` | `filed_at` が一致しても飛ばさない。範囲を絞って使う |
+| `ETL_SKIP_SUMMARIES=true` | 要約を作らない（API 費用が出ない） |
+| `ETL_SKIP_SUBSIDIES=true` | gBizINFO を引かない |
+
+### 進捗の追い方
+
+ログには提出日が出る。強制終了しても、この行を見れば続きから再開できる。
+
+```
+提出日 2021-06-29: 448 通（累計 取り込み 0 / 既存 0）
+```
+
+`ETL_DATE_FROM` にその日付を指定して実行すれば、その日を丸ごとやり直す形で続けられる
+（重複は upsert なので無害）。実行中は `data/.etl-running` があり、
+フロントのビルドも `npm run dev` も止まる。同時に触ると SQLite が壊れるため。
+
 ### 取り込み対象
 
 `docTypeCode=120`（有価証券報告書）には**投資信託の有報が大量に混ざる**。
