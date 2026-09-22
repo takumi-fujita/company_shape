@@ -10,6 +10,7 @@
 import 'server-only';
 import fs from 'node:fs';
 import path from 'node:path';
+import { hasIndustry } from './industry';
 import { assertEtlNotRunning, openWithRetry } from './sqlite';
 import type {
   Company,
@@ -177,9 +178,14 @@ export function getIndustryStat(industryCode: string): IndustryStat | undefined 
  */
 export function getPeers(company: Company, n = 4): Company[] {
   const base = company.employees ?? 0;
+  // 業種が引けない会社（東証以外）は、同じ「分類なし」同士を並べても
+  // 業種の共通性が無い。その場合だけ母集団を全社に広げ、規模だけで選ぶ。
+  const sameIndustry = hasIndustry(company.industryCode);
   return dataset()
     .companies.filter(
-      (c) => c.industryCode === company.industryCode && c.edinetCode !== company.edinetCode,
+      (c) =>
+        c.edinetCode !== company.edinetCode &&
+        (!sameIndustry || c.industryCode === company.industryCode),
     )
     .sort((a, b) => Math.abs((a.employees ?? 0) - base) - Math.abs((b.employees ?? 0) - base))
     .slice(0, n);

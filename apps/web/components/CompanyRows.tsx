@@ -2,6 +2,7 @@ import Link from 'next/link';
 import Pill from './Pill';
 import styles from './CompanyBrowser.module.css';
 import { runwayDisplay, salaryLevel, tenureLevel } from '@/lib/detail';
+import { hasIndustry } from '@/lib/industry';
 import { employees as fmtEmp, salary as fmtSal, tenure as fmtTen } from '@/lib/format';
 import type { IndustryStat, SearchIndexEntry } from '@/lib/types';
 
@@ -33,7 +34,9 @@ export default function CompanyRows({
   keepScroll = false,
 }: Props) {
   const rows = entries.map((e) => {
-    const stat = statsByIndustry.get(e.industryCode);
+    // 業種が引けない会社（東証以外）は「分類なし」の中央値と比べても意味がない。
+    // 比較そのものを行わず、ピルを出さない。詳細は lib/industry.ts。
+    const stat = hasIndustry(e.industryCode) ? statsByIndustry.get(e.industryCode) : undefined;
     const salLevel = salaryLevel(e.avgSalary, stat?.medianSalary ?? null);
     const tenLevel = tenureLevel(e.avgTenure, stat?.medianTenure ?? null);
     return {

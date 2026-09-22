@@ -2,6 +2,7 @@ import type { MetadataRoute } from 'next';
 import { getAllCompanies, getIndustryStats, isThin } from '@/lib/db';
 import { METRIC_KEYS, rankingSlug } from '@/lib/ranking';
 import { SITE_URL } from '@/lib/site';
+import { hasIndustry } from '@/lib/industry';
 
 export const dynamic = 'force-static';
 
@@ -35,7 +36,10 @@ export default async function sitemap({ id }: { id: SitemapId }): Promise<Metada
   }
 
   if (id === 'industries') {
-    return getIndustryStats().map((s) => ({
+    // 「分類なし」は業種ではないのでページを作っていない。sitemap にも載せない。
+    return getIndustryStats()
+      .filter((s) => hasIndustry(s.industryCode))
+      .map((s) => ({
       url: `${SITE_URL}/industry/${s.industryCode}/`,
       changeFrequency: 'weekly' as const,
       priority: 0.7,
@@ -43,7 +47,9 @@ export default async function sitemap({ id }: { id: SitemapId }): Promise<Metada
   }
 
   if (id === 'rankings') {
-    return getIndustryStats().flatMap((s) =>
+    return getIndustryStats()
+      .filter((s) => hasIndustry(s.industryCode))
+      .flatMap((s) =>
       METRIC_KEYS.map((m) => ({
         url: `${SITE_URL}/ranking/${rankingSlug(s.industryCode, m)}/`,
         changeFrequency: 'weekly' as const,

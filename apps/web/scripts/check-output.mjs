@@ -104,6 +104,32 @@ for (const [dir, suffix] of [['company', '/'], ['industry', '/'], ['ranking', '/
   }
 }
 
+// 1e. sitemap に載せた URL が実在するか。
+// 生成条件を絞ったのに sitemap 側を直し忘れると、404 を Google に送り続ける
+// （「分類なし」の業種ページとランキングを消したときに実際に起きた）。
+{
+  const dir = path.join(OUT, 'sitemap');
+  const files = fs.existsSync(dir) ? fs.readdirSync(dir).filter((f) => f.endsWith('.xml')) : [];
+  let dead = 0;
+  const sample = [];
+  for (const f of files) {
+    const xml = fs.readFileSync(path.join(dir, f), 'utf8');
+    for (const m of xml.matchAll(/<loc>([^<]+)<\/loc>/g)) {
+      const rel = m[1].replace(/^https?:\/\/[^/]+/, '');
+      // sitemap 自身を指す行（インデックス）は対象外。
+      if (rel.startsWith('/sitemap')) continue;
+      const target = rel.endsWith('/')
+        ? path.join(OUT, rel, 'index.html')
+        : path.join(OUT, rel);
+      if (!fs.existsSync(target)) {
+        dead += 1;
+        if (sample.length < 5) sample.push(rel);
+      }
+    }
+  }
+  if (dead) problems.push(`sitemap が実在しない URL を ${dead} 件含む（例: ${sample.join(', ')}）`);
+}
+
 // 2. robots.txt が指す sitemap が実在するか
 const robots = must('robots.txt', 'app/robots.ts で生成される');
 if (fs.existsSync(robots)) {

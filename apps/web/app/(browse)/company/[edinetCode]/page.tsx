@@ -10,6 +10,7 @@ import SegmentChart from '@/components/charts/SegmentChart';
 import { SEGMENT_COLORS } from '@/lib/chart/series';
 import { radarSummary } from '@/lib/chart/radar';
 import { getAllCompanies, getCompany, getIndustryStat, getPeers, isThin } from '@/lib/db';
+import { hasIndustry } from '@/lib/industry';
 import {
   buildNumberNotes,
   buildScoreCards,
@@ -85,7 +86,10 @@ export default async function CompanyPage({
   const c = getCompany(edinetCode);
   if (!c) notFound();
 
-  const stat = getIndustryStat(c.industryCode);
+  // 業種が引けない会社（東証以外の上場）では、業種内の相対評価を出さない。
+  // 「分類なし」は業種ではなく括りにすぎず、順位や中央値に意味がない。
+  const ranked = hasIndustry(c.industryCode);
+  const stat = ranked ? getIndustryStat(c.industryCode) : undefined;
   const peers = getPeers(c, 4);
   const scores = buildScoreCards(c, stat);
   const notes = buildNumberNotes(c, stat);
@@ -138,7 +142,11 @@ export default async function CompanyPage({
         <nav className={styles.breadcrumb} aria-label="パンくず">
           <Link href="/companies/">会社をさがす</Link>
           <span>/</span>
-          <Link href={`/industry/${c.industryCode}/`}>{c.industryLabel}</Link>
+          {ranked ? (
+            <Link href={`/industry/${c.industryCode}/`}>{c.industryLabel}</Link>
+          ) : (
+            <span>{c.industryLabel}</span>
+          )}
           <span>/</span>
           <span className={styles.breadcrumbCurrent}>{c.name}</span>
         </nav>
@@ -167,7 +175,8 @@ export default async function CompanyPage({
         </span>
       </div>
 
-      {/* 3. レーダー「会社のかたち」 */}
+      {/* 3. レーダー「会社のかたち」（業種内の順位なので、業種があるときだけ出す） */}
+      {ranked && (
       <section className={`${styles.section} ${styles.sectionTight}`}>
         <h2 className={styles.h2}>会社のかたち</h2>
         <span className={styles.sectionLead}>
@@ -193,6 +202,7 @@ export default async function CompanyPage({
           </div>
         </div>
       </section>
+      )}
 
       {/* 4. スコアカード 4 枚 */}
       <div className={styles.cols4}>
@@ -522,10 +532,14 @@ export default async function CompanyPage({
         />
       </aside>
 
-      {/* 14. 同じ業種の会社 */}
+      {/*
+        14. 近い会社への導線。
+        業種が引けない会社では「同じ業種」ではなく規模だけで選んでいる
+        （lib/db.ts の getPeers）。見出しも実態に合わせる。
+      */}
       {peers.length > 0 && (
         <section className={styles.plainSection}>
-          <h2 className={styles.h2}>同じ業種の会社</h2>
+          <h2 className={styles.h2}>{ranked ? '同じ業種の会社' : '規模が近い会社'}</h2>
           <div className={styles.colsPeer}>
             {peers.map((p) => (
               <Link key={p.edinetCode} className={styles.peer} href={`/company/${p.edinetCode}/`}>
@@ -542,12 +556,14 @@ export default async function CompanyPage({
               </Link>
             ))}
           </div>
-          <span className={styles.legendRow}>
-            <Link href={`/industry/${c.industryCode}/`}>{c.industryLabel}の会社をすべて見る</Link>
-            <Link href={`/ranking/${c.industryCode}-salary/`}>
-              {c.industryLabel}の平均年収ランキング
-            </Link>
-          </span>
+          {ranked && (
+            <span className={styles.legendRow}>
+              <Link href={`/industry/${c.industryCode}/`}>{c.industryLabel}の会社をすべて見る</Link>
+              <Link href={`/ranking/${c.industryCode}-salary/`}>
+                {c.industryLabel}の平均年収ランキング
+              </Link>
+            </span>
+          )}
         </section>
       )}
 

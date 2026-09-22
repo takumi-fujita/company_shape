@@ -1,3 +1,4 @@
+import { hasIndustry } from '@/lib/industry';
 import { openGraph } from '@/lib/site';
 import Link from 'next/link';
 import type { Metadata } from 'next';
@@ -19,9 +20,10 @@ import styles from '@/app/hub.module.css';
 export const dynamicParams = false;
 
 export function generateStaticParams() {
-  return getIndustryStats().flatMap((s) =>
-    METRIC_KEYS.map((m) => ({ slug: rankingSlug(s.industryCode, m) })),
-  );
+  // 「分類なし」は業種ではないので順位を付けない。詳細は lib/industry.ts。
+  return getIndustryStats()
+    .filter((s) => hasIndustry(s.industryCode))
+    .flatMap((s) => METRIC_KEYS.map((m) => ({ slug: rankingSlug(s.industryCode, m) })));
 }
 
 export async function generateMetadata({

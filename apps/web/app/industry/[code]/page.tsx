@@ -1,3 +1,4 @@
+import { hasIndustry } from '@/lib/industry';
 import { openGraph } from '@/lib/site';
 import Link from 'next/link';
 import type { Metadata } from 'next';
@@ -11,7 +12,10 @@ import styles from '@/app/hub.module.css';
 export const dynamicParams = false;
 
 export function generateStaticParams() {
-  return getIndustryStats().map((s) => ({ code: s.industryCode }));
+  // 「分類なし」は業種ではないのでページを作らない。詳細は lib/industry.ts。
+  return getIndustryStats()
+    .filter((s) => hasIndustry(s.industryCode))
+    .map((s) => ({ code: s.industryCode }));
 }
 
 export async function generateMetadata({
