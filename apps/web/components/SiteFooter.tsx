@@ -28,7 +28,7 @@ export default function SiteFooter() {
           ))}
         </nav>
         <span className={styles.note}>
-          出典: 金融庁 EDINET / 経済産業省 gBizINFO。数値は公開情報からの機械抽出で、評価・解釈・投資判断・就職や転職の勧誘を含みません。
+          出典: 金融庁 EDINET / 経済産業省 gBizINFO。数値は公開情報からの機械抽出で、評価・解釈・投資判断を含みません。一部のページに広告を掲載しています。
         </span>
         <span className={styles.note}>© 2026 {SITE_NAME}</span>
       </div>
