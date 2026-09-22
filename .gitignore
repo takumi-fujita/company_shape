@@ -27,3 +27,8 @@ env.local
 !.env.example
 !ops/env.example
 data/.etl-running
+
+# JPX の元データ。industries.csv を作るときだけ要る。成果物の CSV はコミットする。
+# 月次で差し替わるバイナリを履歴に積まない。取得手順は pipeline/README.md。
+pipeline/data/data_j.xls
+pipeline/data/data_j.xlsx

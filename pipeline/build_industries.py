@@ -50,7 +50,48 @@ def _sec_code(value):
     return code
 
 
-def read_rows(xls_path):
+#: xlsx（Office Open XML）の名前空間。
+_SSML = "{http://schemas.openxmlformats.org/spreadsheetml/2006/main}"
+
+
+def _read_xlsx(path):
+    """xlsx を標準ライブラリだけで読む。1 シート目を行の配列で返す。
+
+    JPX の配布が .xls から .xlsx に変わったため。openpyxl を足す手もあるが、
+    ホストに何も入れずに `python3 pipeline/build_industries.py` を実行できる
+    ことを優先した（XBRL を arelle でなく xml.etree で読んでいるのと同じ判断）。
+
+    必要なのは値の取り出しだけなので、書式や数式は扱わない。
+    """
+    import xml.etree.ElementTree as ET  # noqa: PLC0415 変換のときだけ要る
+    import zipfile  # noqa: PLC0415
+
+    with zipfile.ZipFile(path) as z:
+        # 文字列は sharedStrings.xml に集約され、セルからは番号で参照される。
+        shared = []
+        if "xl/sharedStrings.xml" in z.namelist():
+            for si in ET.fromstring(z.read("xl/sharedStrings.xml")):
+                shared.append("".join(t.text or "" for t in si.iter(_SSML + "t")))
+
+        sheet = ET.fromstring(z.read("xl/worksheets/sheet1.xml"))
+
+    rows = []
+    for row in sheet.iter(_SSML + "row"):
+        cells = []
+        for c in row.iter(_SSML + "c"):
+            v = c.find(_SSML + "v")
+            text = "" if v is None else (v.text or "")
+            if c.get("t") == "s" and text:
+                # 共有文字列への参照。範囲外は書式の壊れなので空として扱う。
+                i = int(text)
+                text = shared[i] if 0 <= i < len(shared) else ""
+            cells.append(text)
+        rows.append(cells)
+    return rows
+
+
+def _read_xls(path):
+    """旧形式。JPX が .xls に戻したときのために残す。"""
     try:
         import xlrd  # noqa: PLC0415 変換のときだけ要る
     except ImportError:
@@ -62,9 +103,21 @@ def read_rows(xls_path):
         )
         raise SystemExit(2)
 
-    book = xlrd.open_workbook(xls_path)
+    book = xlrd.open_workbook(path)
     sheet = book.sheet_by_index(0)
-    header = [_cell(sheet.cell_value(0, c)) for c in range(sheet.ncols)]
+    return [
+        [_cell(sheet.cell_value(r, c)) for c in range(sheet.ncols)]
+        for r in range(sheet.nrows)
+    ]
+
+
+def read_rows(xls_path):
+    grid = _read_xlsx(xls_path) if xls_path.lower().endswith("x") else _read_xls(xls_path)
+    if not grid:
+        print("%s が空です。" % xls_path, file=sys.stderr)
+        raise SystemExit(2)
+
+    header = [_cell(v) for v in grid[0]]
 
     required = ["コード", "市場・商品区分", "33業種コード", "33業種区分"]
     missing = [c for c in required if c not in header]
@@ -77,10 +130,11 @@ def read_rows(xls_path):
         raise SystemExit(2)
 
     idx = {name: header.index(name) for name in required}
-    return [
-        {name: sheet.cell_value(r, i) for name, i in idx.items()}
-        for r in range(1, sheet.nrows)
-    ]
+    # 行によって末尾の空セルが省かれることがあるので、範囲外は空文字にする。
+    def at(row, i):
+        return row[i] if i < len(row) else ""
+
+    return [{name: at(row, i) for name, i in idx.items()} for row in grid[1:]]
 
 
 def convert(rows):
