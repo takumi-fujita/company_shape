@@ -68,7 +68,7 @@ cp ops/env.example .env
 
 docker compose build
 docker compose run --rm etl run           # 1 回だけ
-docker compose up -d                      # 常駐（日次実行）
+docker compose up -d                      # 常駐（週 1 実行）
 docker compose logs -f etl
 ```
 
@@ -109,7 +109,7 @@ SKIP_DEPLOY=true bash ops/daily-update.sh   # 配信せずデータ更新だけ
 | 3 | gBizINFO（補助金）、パーセンタイル全社計算 | 実装済み・**実データ未投入**（gBizINFO トークン待ち） |
 | 4 | AI 要約 + ガード | 実装済み・**実生成は未実行**（ANTHROPIC_API_KEY 待ち） |
 | 5 | ランキング・業種ページ、sitemap、SEO | 完了 |
-| 6 | Cloudflare Pages デプロイ、日次スケジュール | 実装済み・**未設置**（Cloudflare の作成と `.env` の記入待ち） |
+| 6 | Cloudflare Pages デプロイ、定期スケジュール | 実装済み・**未設置**（Cloudflare の作成と `.env` の記入待ち） |
 
 ## 変えてはいけないもの
 
@@ -130,10 +130,10 @@ SKIP_DEPLOY=true bash ops/daily-update.sh   # 配信せずデータ更新だけ
 - `NEXT_PUBLIC_SITE_URL` に既定値を置かない。未設定なら本番ビルドを例外で止める。
   存在しないドメインが canonical や sitemap に混入したまま公開されるほうが高くつく。
 
-## デプロイと日次更新
+## デプロイと定期更新
 
 ```
-Docker コンテナ（常駐 / 20:00 UTC = 翌 05:00 JST）
+Docker コンテナ（常駐 / 毎週月曜 20:00 UTC = 火曜 05:00 JST）
   EDINET / gBizINFO / Anthropic → pipeline/main.py → data/companies.db
                                                     → git commit && push
   → 禁止語・テスト・SSG・予算 → wrangler → Cloudflare Pages

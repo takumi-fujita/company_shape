@@ -1,7 +1,7 @@
 # ops — 取り込みと配信
 
 ```
-Docker コンテナ（常駐 / supercronic が 20:00 UTC = 翌 05:00 JST に起動）
+Docker コンテナ（常駐 / supercronic が毎週月曜 20:00 UTC = 火曜 05:00 JST に起動）
   EDINET / gBizINFO / Anthropic → pipeline/main.py → data/companies.db
                                                     → git commit && push
   → 禁止語チェック・テスト・SSG ビルド・予算 → wrangler → Cloudflare Pages
@@ -134,7 +134,15 @@ docker compose run --rm etl shell                     # 調査用シェル
 
 ## 3. 初回の投入
 
-日次実行は前日分の差分しか取らない。過去分は単発実行で入れる。
+定期実行が取るのは既定で 14 日前から前日まで。過去分は単発実行で入れる。
+
+実行の間隔（週 1）より窓を広く取ってあるので、PC がスリープしていた等で
+1 回落としても次回が拾い直す。取り込み済みの提出は `filed_at` 一致で飛ばされるため、
+窓を広げても増えるのは書類一覧の取得だけ。`ETL_LOOKBACK_DAYS` で変えられる。
+
+頻度を週 1 にしているのは、有報の提出が年 1 回で偏っているため。
+5 年分 20,252 通の実測では 6 月に 60.3%・3 月に 13.1% が集中し、
+それ以外の月は 1 日あたり 10 通ほどしかない。
 
 ### なぜ 5 年分なのか
 

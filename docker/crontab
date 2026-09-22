@@ -1,4 +1,9 @@
-# supercronic 用。コンテナ内で日次実行する。
+# supercronic 用。コンテナ内で定期実行する。
 # 時刻は UTC。20:00 UTC = 翌 05:00 JST。
-# EDINET は当日分が揃うまで時間がかかるので、既定では前日分を取る。
-0 20 * * * /usr/local/bin/entrypoint.sh run
+#
+# 週 1（月曜）。有報の提出は年 1 回で、実測では 6 月に 60%・3 月に 13% が集中し、
+# それ以外の月は 1 日あたり 10 通ほどしかない。毎日回しても大半は空振りになる。
+#
+# 取得範囲は既定で 14 日前から前日まで（ops/daily-update.sh の ETL_LOOKBACK_DAYS）。
+# 実行の間隔より広く取ってあるので、1 回落としても次回が拾い直す。
+0 20 * * 1 /usr/local/bin/entrypoint.sh run

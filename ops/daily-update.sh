@@ -149,10 +149,19 @@ deploy_site() {
 }
 
 # --- 対象期間とオプション --------------------------------------------------
-# 既定は前日 1 日分。EDINET は当日分が揃うまで時間がかかるため。
+# 終わりは前日。EDINET は当日分が揃うまで時間がかかるため。
+#
+# 始まりは既定で 14 日前。実行の間隔より広く取るのが肝で、
+#   - 実行が週 1 でも取りこぼさない
+#   - PC がスリープしていた等で実行を落としても、次回が拾い直す
+# 取り込み済みの提出は filed_at 一致で飛ばされるので、
+# 窓を広げても増えるのは書類一覧の取得だけ（1 日あたり 0.5 秒ほど）。
+#
 # 引数 > 環境変数 > 既定値 の順で決める（CI からは環境変数で渡す）。
+LOOKBACK_DAYS="${ETL_LOOKBACK_DAYS:-14}"
 YESTERDAY="$(date -v-1d '+%Y-%m-%d' 2>/dev/null || date -d 'yesterday' '+%Y-%m-%d')"
-DATE_FROM="${1:-${ETL_DATE_FROM:-$YESTERDAY}}"
+LOOKBACK="$(date -v-${LOOKBACK_DAYS}d '+%Y-%m-%d' 2>/dev/null || date -d "${LOOKBACK_DAYS} days ago" '+%Y-%m-%d')"
+DATE_FROM="${1:-${ETL_DATE_FROM:-$LOOKBACK}}"
 
 # 終了日の既定:
 #   引数や ETL_DATE_TO があればそれ。
