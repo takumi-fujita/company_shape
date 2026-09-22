@@ -504,15 +504,21 @@ export default async function CompanyPage({
         >
           20代の転職相談ならウズキャリ（無料・登録3分）
         </a>
-        {/* 成果計測用。表示はされないが必ず残すこと。 */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="https://t.afi-b.com/lead/Y10585M/r991679P/3356700c"
-          width="1"
-          height="1"
-          style={{ border: 'none' }}
-          alt=""
-          aria-hidden="true"
+        {/*
+          成果計測用の 1x1。表示はされないが必ず残すこと。
+
+          JSX の <img> で書くと React が <head> に
+          <link rel="preload" as="image"> を挿し込み、ページを開いた直後に
+          リクエストが飛ぶ。広告はファーストビュー外に置く方針なので、
+          そのまま素の HTML として出して preload を起こさせない。
+          loading="lazy" で、枠が視界に入るまで読み込まない。
+        */}
+        <span
+          dangerouslySetInnerHTML={{
+            __html:
+              '<img src="https://t.afi-b.com/lead/Y10585M/r991679P/3356700c"' +
+              ' width="1" height="1" style="border:none" alt="" aria-hidden="true" loading="lazy" />',
+          }}
         />
       </aside>
 
