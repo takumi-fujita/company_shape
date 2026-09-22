@@ -25,6 +25,9 @@ services:
     volumes:
       # ホストのリポジトリをそのまま使う。data/companies.db がホスト側に残る。
       - .:/app
+      # 実行スケジュール。イメージにも焼いてあるが、マウントで上書きする。
+      # 焼いたままだと頻度を変えるたびに 1.64GB のイメージを作り直すことになる。
+      - ./docker/crontab:/etc/company-shape/crontab:ro
       # origin が SSH の場合だけ鍵を渡す。既定では空ディレクトリなので何も露出しない。
       # 使うときは .env に絶対パスで書く（compose は ~ を展開しない）:
       #   GIT_SSH_DIR=/Users/you/.ssh
